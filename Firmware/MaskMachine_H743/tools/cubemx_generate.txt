@@ -1,0 +1,3 @@
+load D:\Project\Mask_Machine_Project\Firmware\MaskMachine_H743\MaskMachine_H743.ioc
+generate code D:\Project\Mask_Machine_Project\Firmware\MaskMachine_H743
+exit

@@ -1,0 +1,62 @@
+# Local reference material and previous experiments
+NECCS/
+慧勤智远 STM32H743IIT6 V1.3小系统板/
+*.HTML
+*.html
+*.pdf
+*.PDF
+*.zip
+*.rar
+*.7z
+
+# Codex/OCR working context
+.codex/
+docs/knowledge/
+
+# STM32CubeMX / Keil generated build products
+Firmware/MaskMachine_H743/Drivers/CMSIS/Core/
+Firmware/MaskMachine_H743/Drivers/CMSIS/Core_A/
+Firmware/MaskMachine_H743/Drivers/CMSIS/DSP/
+Firmware/MaskMachine_H743/Drivers/CMSIS/NN/
+Firmware/MaskMachine_H743/Drivers/CMSIS/RTOS/
+Firmware/MaskMachine_H743/Drivers/CMSIS/RTOS2/
+Firmware/MaskMachine_H743/Drivers/CMSIS/docs/
+Firmware/MaskMachine_H743/Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/
+Firmware/MaskMachine_H743/Drivers/CMSIS/Device/ST/STM32H7xx/Include/*
+!Firmware/MaskMachine_H743/Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h743xx.h
+!Firmware/MaskMachine_H743/Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h
+!Firmware/MaskMachine_H743/Drivers/CMSIS/Device/ST/STM32H7xx/Include/system_stm32h7xx.h
+Firmware/MaskMachine_H743/Middlewares/Third_Party/FreeRTOS/Source/History.txt
+Firmware/MaskMachine_H743/Middlewares/Third_Party/FreeRTOS/Source/readme.txt
+Firmware/MaskMachine_H743/Middlewares/Third_Party/FreeRTOS/Source/st_readme.txt
+**/MDK-ARM/DebugConfig/
+**/MDK-ARM/*.uvguix.*
+**/MDK-ARM/*.uvgui.*
+**/MDK-ARM/*.uvoptx
+**/MDK-ARM/*.scvd
+**/MDK-ARM/*.lst
+**/MDK-ARM/*.map
+**/MDK-ARM/*.htm
+**/MDK-ARM/*.build_log.htm
+**/MDK-ARM/*.dep
+**/MDK-ARM/*.crf
+**/MDK-ARM/*.d
+**/MDK-ARM/*.o
+**/MDK-ARM/*.axf
+**/MDK-ARM/*.elf
+**/MDK-ARM/*.hex
+**/MDK-ARM/*.bin
+**/MDK-ARM/*.lnp
+**/MDK-ARM/*.log
+**/MDK-ARM/*/
+**/MDK-ARM/Listings/
+**/MDK-ARM/Objects/
+**/MDK-ARM/RTE/
+**/.mxproject.bak
+**/*.bak
+
+# Generic editor/system noise
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
