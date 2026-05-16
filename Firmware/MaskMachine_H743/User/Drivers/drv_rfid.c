@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "bsp_log.h"
 #include "bsp_rc522_port.h"
 #include "stm32h7xx_hal.h"
 
@@ -50,6 +51,7 @@ static uint8_t s_initialized;
 static uint8_t s_card_latched;
 static uint8_t s_cached_uid[DRV_RFID_UID_MAX_LEN];
 static uint8_t s_cached_uid_len;
+static uint8_t s_last_bad_version = 0xFFu;
 
 static app_status_t Rc522_WriteReg(uint8_t reg, uint8_t value);
 static app_status_t Rc522_ReadReg(uint8_t reg, uint8_t *value);
@@ -148,9 +150,17 @@ app_status_t Drv_Rfid_Init(void)
 
     if ((version == 0x00u) || (version == 0xFFu))
     {
+        if (s_last_bad_version != version)
+        {
+            s_last_bad_version = version;
+            (void)Bsp_Log_Printf("[rfid] RC522 version probe failed: 0x%02X\r\n",
+                                 (unsigned int)version);
+        }
         return APP_ERR_HW;
     }
 
+    s_last_bad_version = 0xFFu;
+    (void)Bsp_Log_Printf("[rfid] RC522 version=0x%02X\r\n", (unsigned int)version);
     s_initialized = 1u;
     Rc522_ClearCachedCard();
     return APP_OK;

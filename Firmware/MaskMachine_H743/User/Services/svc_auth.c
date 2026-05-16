@@ -3,8 +3,7 @@
 
 app_status_t Svc_Auth_Init(void)
 {
-    (void)Drv_Rfid_Init();
-    return APP_OK;
+    return Drv_Rfid_Init();
 }
 
 app_status_t Svc_Auth_Poll(svc_auth_result_t *result)
@@ -26,8 +25,6 @@ app_status_t Svc_Auth_Poll(svc_auth_result_t *result)
         return APP_OK;
     }
 
-    result->state = ((ret == APP_ERR_NOT_IMPLEMENTED) || (ret == APP_ERR_NOT_READY))
-                    ? SVC_AUTH_UNAVAILABLE
-                    : SVC_AUTH_NONE;
+    result->state = (ret == APP_OK) ? SVC_AUTH_NONE : SVC_AUTH_UNAVAILABLE;
     return ret;
 }

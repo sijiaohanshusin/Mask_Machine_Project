@@ -1,5 +1,6 @@
 #include "app_main.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "app_config.h"
@@ -19,6 +20,7 @@ static uint8_t s_initialized;
 
 static void App_HandleEvent(const app_event_t *event);
 static void App_UpdateUiSnapshot(void);
+static void App_LogAuthCard(const drv_rfid_card_t *card);
 
 void App_Main_SetEventQueue(osMessageQueueId_t queue_id)
 {
@@ -27,6 +29,8 @@ void App_Main_SetEventQueue(osMessageQueueId_t queue_id)
 
 app_status_t App_Main_Init(void)
 {
+    app_status_t auth_init_status;
+
     if (s_initialized != 0u)
     {
         return APP_OK;
@@ -37,7 +41,7 @@ app_status_t App_Main_Init(void)
     (void)Svc_Diag_Init();
     (void)Svc_Inventory_Init();
     (void)Svc_Dispenser_Init();
-    (void)Svc_Auth_Init();
+    auth_init_status = Svc_Auth_Init();
     (void)Svc_Environment_Init();
 
     s_initialized = 1u;
@@ -46,6 +50,7 @@ app_status_t App_Main_Init(void)
     (void)Bsp_Log_Printf("[boot] SYSCLK=%lu Hz USART1=%lu baud\r\n",
                          (unsigned long)HAL_RCC_GetSysClockFreq(),
                          (unsigned long)APP_LOG_BAUDRATE);
+    (void)Bsp_Log_Printf("[auth] rc522 init %s\r\n", App_Status_ToString(auth_init_status));
     (void)Bsp_Log_Printf("[boot] base app ready; display init is deferred to UI task\r\n");
     return APP_OK;
 }
@@ -113,6 +118,7 @@ void App_Task_InputPoll(void *argument)
     {
         if (Svc_Auth_Poll(&auth) == APP_OK && auth.state == SVC_AUTH_CARD_PRESENT)
         {
+            App_LogAuthCard(&auth.card);
             app_event_t event = {
                 .type = APP_EVENT_AUTH_PRESENT,
                 .arg0 = 0u,
@@ -274,4 +280,40 @@ static void App_UpdateUiSnapshot(void)
     snapshot.connectivity.mqtt_known = 0u;
     snapshot.connectivity.signal_known = 0u;
     (void)Svc_Ui_SetSnapshot(&snapshot);
+}
+
+static void App_LogAuthCard(const drv_rfid_card_t *card)
+{
+    char uid_text[(DRV_RFID_UID_MAX_LEN * 3u) + 1u];
+    uint32_t offset = 0u;
+    uint8_t index;
+
+    if ((card == NULL) || (card->uid_len == 0u))
+    {
+        return;
+    }
+
+    uid_text[0] = '\0';
+    for (index = 0u; (index < card->uid_len) && (index < DRV_RFID_UID_MAX_LEN); index++)
+    {
+        int written = snprintf(&uid_text[offset],
+                               sizeof(uid_text) - offset,
+                               (index == 0u) ? "%02X" : " %02X",
+                               (unsigned int)card->uid[index]);
+        if (written <= 0)
+        {
+            break;
+        }
+
+        offset += (uint32_t)written;
+        if (offset >= sizeof(uid_text))
+        {
+            uid_text[sizeof(uid_text) - 1u] = '\0';
+            break;
+        }
+    }
+
+    (void)Bsp_Log_Printf("[auth] card uid=%s len=%u\r\n",
+                         uid_text,
+                         (unsigned int)card->uid_len);
 }
