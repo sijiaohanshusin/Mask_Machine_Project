@@ -12,10 +12,11 @@ try {
     $groupsNode = $target.Groups
 
     $includeAdd = @(
-        '../User/App',
+        '../User/Runtime',
         '../User/BSP',
         '../User/common',
         '../User/Drivers',
+        '../User/Fonts',
         '../User/Services',
         '../Middlewares/LVGL',
         '../Middlewares/LVGL/lvgl',
@@ -35,7 +36,6 @@ try {
         if ($node.InnerText) {
             $parts += $node.InnerText.Split(';') | Where-Object { $_ -ne '' }
         }
-
         foreach ($inc in $includeAdd) {
             if ($parts -notcontains $inc) {
                 $parts += $inc
@@ -57,7 +57,8 @@ try {
         $defineNode.InnerText = ($defs -join ',')
     }
 
-    foreach ($name in @('User/App', 'User/BSP', 'User/common', 'User/Drivers', 'User/Services', 'Middlewares/LVGL')) {
+    $legacyAppGroup = 'User/' + 'App'
+    foreach ($name in @($legacyAppGroup, 'User/Runtime', 'User/BSP', 'User/common', 'User/Drivers', 'User/Fonts', 'User/Services', 'Middlewares/LVGL')) {
         foreach ($existing in @($groupsNode.Group | Where-Object { $_.GroupName -eq $name })) {
             [void]$groupsNode.RemoveChild($existing)
         }
@@ -91,9 +92,41 @@ try {
         return '../' + $rel
     }
 
-    foreach ($dir in @('App', 'BSP', 'common', 'Drivers', 'Services')) {
+    foreach ($dir in @('Runtime', 'BSP', 'common', 'Drivers', 'Fonts', 'Services')) {
+        if (-not (Test-Path ".\User\$dir")) {
+            continue
+        }
         $files = Get-ChildItem -Path ".\User\$dir" -Filter *.c -File | ForEach-Object { To-UvPath $_.FullName }
         Add-Group $xml $groupsNode "User/$dir" ([string[]]$files)
+    }
+
+    $driverGroup = $groupsNode.Group | Where-Object { $_.GroupName -eq 'Drivers/STM32H7xx_HAL_Driver' } | Select-Object -First 1
+    if ($null -ne $driverGroup) {
+        $driverFilesNode = $driverGroup.Files
+        $requiredHalDrivers = @(
+            '../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma2d.c',
+            '../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_ltdc.c',
+            '../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_ltdc_ex.c',
+            '../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sdram.c',
+            '../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c'
+        )
+
+        $existingDriverPaths = @()
+        if ($null -ne $driverFilesNode) {
+            $existingDriverPaths = @($driverFilesNode.File | ForEach-Object { $_.FilePath })
+        }
+
+        foreach ($path in $requiredHalDrivers) {
+            if ($existingDriverPaths -contains $path) {
+                continue
+            }
+
+            $file = $xml.CreateElement('File')
+            [void]$file.AppendChild((New-TextElement $xml 'FileName' ([IO.Path]::GetFileName($path))))
+            [void]$file.AppendChild((New-TextElement $xml 'FileType' '1'))
+            [void]$file.AppendChild((New-TextElement $xml 'FilePath' $path))
+            [void]$driverFilesNode.AppendChild($file)
+        }
     }
 
     $lvglDirs = @(

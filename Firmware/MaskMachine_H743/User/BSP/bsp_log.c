@@ -9,9 +9,9 @@
 #define BSP_LOG_BUFFER_SIZE 192u
 #endif
 
-app_status_t Bsp_Log_Init(void)
+mm_status_t Bsp_Log_Init(void)
 {
-    return APP_OK;
+    return MM_OK;
 }
 
 int Bsp_Log_Printf(const char *fmt, ...)

@@ -48,6 +48,8 @@ Firmware/MaskMachine_H743/Middlewares/Third_Party/FreeRTOS/Source/st_readme.txt
 **/MDK-ARM/*.bin
 **/MDK-ARM/*.lnp
 **/MDK-ARM/*.log
+**/MDK-ARM/JLinkLog.txt
+**/MDK-ARM/JLinkSettings.ini
 **/MDK-ARM/*/
 **/MDK-ARM/Listings/
 **/MDK-ARM/Objects/

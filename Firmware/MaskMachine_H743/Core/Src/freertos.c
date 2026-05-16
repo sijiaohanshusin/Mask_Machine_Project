@@ -25,9 +25,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "app_config.h"
-#include "app_main.h"
-#include "app_types.h"
+#include "mm_config.h"
+#include "mm_runtime.h"
+#include "mm_types.h"
 
 /* USER CODE END Includes */
 
@@ -48,37 +48,37 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-osMessageQueueId_t appEventQueueHandle;
-const osMessageQueueAttr_t appEventQueue_attributes = {
-  .name = "appEventQueue"
+osMessageQueueId_t mmEventQueueHandle;
+const osMessageQueueAttr_t mmEventQueue_attributes = {
+  .name = "mmEventQueue"
 };
 
-osThreadId_t appControlTaskHandle;
-const osThreadAttr_t appControlTask_attributes = {
-  .name = "appControl",
-  .stack_size = APP_CONTROL_TASK_STACK_WORDS * 4U,
-  .priority = (osPriority_t) (osPriorityNormal + APP_CONTROL_TASK_PRIO),
+osThreadId_t mmControlTaskHandle;
+const osThreadAttr_t mmControlTask_attributes = {
+  .name = "mmControl",
+  .stack_size = MM_CONTROL_TASK_STACK_WORDS * 4U,
+  .priority = (osPriority_t) (osPriorityNormal + MM_CONTROL_TASK_PRIO),
 };
 
-osThreadId_t appUiTaskHandle;
-const osThreadAttr_t appUiTask_attributes = {
-  .name = "appUi",
-  .stack_size = APP_UI_TASK_STACK_WORDS * 4U,
-  .priority = (osPriority_t) (osPriorityNormal + APP_UI_TASK_PRIO),
+osThreadId_t mmUiTaskHandle;
+const osThreadAttr_t mmUiTask_attributes = {
+  .name = "mmUi",
+  .stack_size = MM_UI_TASK_STACK_WORDS * 4U,
+  .priority = (osPriority_t) (osPriorityNormal + MM_UI_TASK_PRIO),
 };
 
-osThreadId_t appDiagTaskHandle;
-const osThreadAttr_t appDiagTask_attributes = {
-  .name = "appDiag",
-  .stack_size = APP_DIAG_TASK_STACK_WORDS * 4U,
-  .priority = (osPriority_t) (osPriorityNormal + APP_DIAG_TASK_PRIO),
+osThreadId_t mmDiagTaskHandle;
+const osThreadAttr_t mmDiagTask_attributes = {
+  .name = "mmDiag",
+  .stack_size = MM_DIAG_TASK_STACK_WORDS * 4U,
+  .priority = (osPriority_t) (osPriorityNormal + MM_DIAG_TASK_PRIO),
 };
 
-osThreadId_t appPollTaskHandle;
-const osThreadAttr_t appPollTask_attributes = {
-  .name = "appPoll",
-  .stack_size = APP_POLL_TASK_STACK_WORDS * 4U,
-  .priority = (osPriority_t) (osPriorityNormal + APP_POLL_TASK_PRIO),
+osThreadId_t mmPollTaskHandle;
+const osThreadAttr_t mmPollTask_attributes = {
+  .name = "mmPoll",
+  .stack_size = MM_POLL_TASK_STACK_WORDS * 4U,
+  .priority = (osPriority_t) (osPriorityNormal + MM_POLL_TASK_PRIO),
 };
 
 /* USER CODE END Variables */
@@ -122,8 +122,8 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  appEventQueueHandle = osMessageQueueNew(APP_EVENT_QUEUE_DEPTH, sizeof(app_event_t), &appEventQueue_attributes);
-  App_Main_SetEventQueue(appEventQueueHandle);
+  mmEventQueueHandle = osMessageQueueNew(MM_EVENT_QUEUE_DEPTH, sizeof(mm_event_t), &mmEventQueue_attributes);
+  Mm_Runtime_SetEventQueue(mmEventQueueHandle);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -131,11 +131,11 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  (void)App_Main_Init();
-  appControlTaskHandle = osThreadNew(App_Task_Control, NULL, &appControlTask_attributes);
-  appUiTaskHandle = osThreadNew(App_Task_Ui, NULL, &appUiTask_attributes);
-  appDiagTaskHandle = osThreadNew(App_Task_Diag, NULL, &appDiagTask_attributes);
-  appPollTaskHandle = osThreadNew(App_Task_InputPoll, NULL, &appPollTask_attributes);
+  (void)Mm_Runtime_Init();
+  mmControlTaskHandle = osThreadNew(Mm_Task_Control, NULL, &mmControlTask_attributes);
+  mmUiTaskHandle = osThreadNew(Mm_Task_Ui, NULL, &mmUiTask_attributes);
+  mmDiagTaskHandle = osThreadNew(Mm_Task_Diag, NULL, &mmDiagTask_attributes);
+  mmPollTaskHandle = osThreadNew(Mm_Task_InputPoll, NULL, &mmPollTask_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -154,7 +154,7 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-  App_Task_Idle(argument);
+  Mm_Task_Idle(argument);
   /* USER CODE END StartDefaultTask */
 }
 

@@ -2,7 +2,7 @@
 #define DRV_RFID_H
 
 #include <stdint.h>
-#include "app_status.h"
+#include "mm_status.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,8 +17,8 @@ typedef struct
     uint8_t uid[DRV_RFID_UID_MAX_LEN];
 } drv_rfid_card_t;
 
-app_status_t Drv_Rfid_Init(void);
-app_status_t Drv_Rfid_Poll(drv_rfid_card_t *card);
+mm_status_t Drv_Rfid_Init(void);
+mm_status_t Drv_Rfid_Poll(drv_rfid_card_t *card);
 
 #ifdef __cplusplus
 }

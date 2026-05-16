@@ -32,16 +32,52 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef struct
+{
+  uint32_t magic;
+  uint32_t fault_id;
+  uint32_t exc_return;
+  uint32_t r0;
+  uint32_t r1;
+  uint32_t r2;
+  uint32_t r3;
+  uint32_t r12;
+  uint32_t lr;
+  uint32_t pc;
+  uint32_t xpsr;
+  uint32_t cfsr;
+  uint32_t hfsr;
+  uint32_t dfsr;
+  uint32_t afsr;
+  uint32_t mmfar;
+  uint32_t bfar;
+  uint32_t icsr;
+  uint32_t shcsr;
+  uint32_t control;
+  uint32_t msp;
+  uint32_t psp;
+  uint32_t primask;
+  uint32_t basepri;
+} mm_fault_record_t;
 
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+#define MM_FAULT_MAGIC      (0xFA17FA17UL)
+#define MM_FAULT_NMI        (1UL)
+#define MM_FAULT_HARD       (2UL)
+#define MM_FAULT_MEMMANAGE  (3UL)
+#define MM_FAULT_BUS        (4UL)
+#define MM_FAULT_USAGE      (5UL)
+#define MM_FAULT_STACK      (6UL)
+#define MM_FAULT_MALLOC     (7UL)
 
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+extern volatile mm_fault_record_t g_mm_fault_record;
 
 /* USER CODE END EM */
 
@@ -53,6 +89,9 @@ void BusFault_Handler(void);
 void UsageFault_Handler(void);
 void DebugMon_Handler(void);
 void TIM6_DAC_IRQHandler(void);
+void LTDC_IRQHandler(void);
+void LTDC_ER_IRQHandler(void);
+void DMA2D_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
