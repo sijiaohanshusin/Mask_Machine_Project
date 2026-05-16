@@ -62,3 +62,7 @@ Firmware/MaskMachine_H743/Middlewares/Third_Party/FreeRTOS/Source/st_readme.txt
 .idea/
 Thumbs.db
 desktop.ini
+
+# Local loose files
+资料/
+1007-8.exe
