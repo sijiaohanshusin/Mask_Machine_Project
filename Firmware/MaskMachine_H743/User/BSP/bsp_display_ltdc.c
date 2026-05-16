@@ -26,13 +26,13 @@ static void Bsp_DisplayLtdc_Flush(lv_disp_drv_t *disp_drv, const lv_area_t *area
 static void Bsp_DisplayLtdc_ReadTouch(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
 static void Bsp_DisplayLtdc_TryInitTouch(void);
 
-mm_status_t Bsp_DisplayLtdc_Init(void)
+app_status_t Bsp_DisplayLtdc_Init(void)
 {
-    mm_status_t ret;
+    app_status_t ret;
 
     if (s_ready != 0u)
     {
-        return MM_OK;
+        return APP_OK;
     }
 
     (void)Bsp_Log_Printf("[display] backlight probe on PD12...\r\n");
@@ -40,25 +40,25 @@ mm_status_t Bsp_DisplayLtdc_Init(void)
 
     (void)Bsp_Log_Printf("[display] SDRAM init...\r\n");
     ret = Bsp_Sdram_Init();
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
-        (void)Bsp_Log_Printf("[display] SDRAM init failed: %s\r\n", Mm_Status_ToString(ret));
+        (void)Bsp_Log_Printf("[display] SDRAM init failed: %s\r\n", App_Status_ToString(ret));
         return ret;
     }
 
     (void)Bsp_Log_Printf("[display] SDRAM self-test...\r\n");
     ret = Bsp_Sdram_SelfTest();
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
-        (void)Bsp_Log_Printf("[display] SDRAM self-test failed: %s\r\n", Mm_Status_ToString(ret));
+        (void)Bsp_Log_Printf("[display] SDRAM self-test failed: %s\r\n", App_Status_ToString(ret));
         return ret;
     }
 
     (void)Bsp_Log_Printf("[display] LTDC panel init...\r\n");
     ret = Bsp_Lcd_Init();
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
-        (void)Bsp_Log_Printf("[display] LTDC panel init failed: %s\r\n", Mm_Status_ToString(ret));
+        (void)Bsp_Log_Printf("[display] LTDC panel init failed: %s\r\n", App_Status_ToString(ret));
         return ret;
     }
 
@@ -83,7 +83,7 @@ mm_status_t Bsp_DisplayLtdc_Init(void)
     }
 
     s_ready = (s_disp != NULL) ? 1u : 0u;
-    return (s_ready != 0u) ? MM_OK : MM_ERR_HW;
+    return (s_ready != 0u) ? APP_OK : APP_ERR_HW;
 }
 
 void Bsp_DisplayLtdc_Tick(uint32_t elapsed_ms)
@@ -119,7 +119,7 @@ void Bsp_DisplayLtdc_Process(void)
         if ((s_touch_ready != 0u) && (s_touch_poll_ms >= BSP_DISPLAY_TOUCH_POLL_MS))
         {
             s_touch_poll_ms = 0u;
-            s_touch_cache_valid = (Bsp_Touch_Read(&s_touch_cache) == MM_OK) ? 1u : 0u;
+            s_touch_cache_valid = (Bsp_Touch_Read(&s_touch_cache) == APP_OK) ? 1u : 0u;
         }
 
         if (s_process_count < 3u)
@@ -207,7 +207,7 @@ static void Bsp_DisplayLtdc_ReadTouch(lv_indev_drv_t *indev_drv, lv_indev_data_t
     {
         touch = s_touch_cache;
     }
-    else if (Bsp_Touch_Read(&touch) != MM_OK)
+    else if (Bsp_Touch_Read(&touch) != APP_OK)
     {
         data->point = last_point;
         data->state = LV_INDEV_STATE_REL;
@@ -237,7 +237,7 @@ static void Bsp_DisplayLtdc_TryInitTouch(void)
         return;
     }
 
-    if (Bsp_Touch_Init() != MM_OK)
+    if (Bsp_Touch_Init() != APP_OK)
     {
         return;
     }

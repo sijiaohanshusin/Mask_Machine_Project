@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "mm_status.h"
+#include "app_status.h"
 #include "stm32h7xx_hal.h"
 
 #ifdef __cplusplus
@@ -23,7 +23,7 @@ extern "C" {
 extern LTDC_HandleTypeDef g_ltdc_handle;
 extern DMA2D_HandleTypeDef g_dma2d_handle;
 
-mm_status_t Bsp_Lcd_Init(void);
+app_status_t Bsp_Lcd_Init(void);
 void Bsp_Lcd_ProbeBacklightOn(void);
 void Bsp_Lcd_SetBacklight(uint8_t on);
 uint8_t Bsp_Lcd_IsReady(void);

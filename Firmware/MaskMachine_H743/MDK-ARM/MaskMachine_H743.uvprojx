@@ -1,10 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_projx.xsd">
-
   <SchemaVersion>2.1</SchemaVersion>
-
   <Header>### uVision Project, (C) Keil Software</Header>
-
   <Targets>
     <Target>
       <TargetName>MaskMachine_H743</TargetName>
@@ -338,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>USE_PWR_LDO_SUPPLY,USE_HAL_DRIVER,STM32H743xx,LV_CONF_INCLUDE_SIMPLE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../User/Runtime;../User/BSP;../User/common;../User/Drivers;../User/Services;../Middlewares/LVGL;../Middlewares/LVGL/lvgl;../Middlewares/LVGL/lvgl/src;../User/Fonts</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../User/App;../User/BSP;../User/common;../User/Drivers;../User/Services;../Middlewares/LVGL;../Middlewares/LVGL/lvgl;../Middlewares/LVGL/lvgl/src;../User/Fonts</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -356,7 +353,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../User/Runtime;../User/BSP;../User/common;../User/Drivers;../User/Services;../Middlewares/LVGL;../Middlewares/LVGL/lvgl;../Middlewares/LVGL/lvgl/src;../User/Fonts</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../User/App;../User/BSP;../User/common;../User/Drivers;../User/Services;../Middlewares/LVGL;../Middlewares/LVGL/lvgl;../Middlewares/LVGL/lvgl/src;../User/Fonts</IncludePath>
             </VariousControls>
           </Aads>
           <LDads>
@@ -628,12 +625,12 @@
           <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>
-          <GroupName>User/Runtime</GroupName>
+          <GroupName>User/App</GroupName>
           <Files>
             <File>
-              <FileName>mm_runtime.c</FileName>
+              <FileName>app_main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>../User/Runtime/mm_runtime.c</FilePath>
+              <FilePath>../User/App/app_main.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -661,6 +658,11 @@
               <FilePath>../User/BSP/bsp_log.c</FilePath>
             </File>
             <File>
+              <FileName>bsp_rc522_port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../User/BSP/bsp_rc522_port.c</FilePath>
+            </File>
+            <File>
               <FileName>bsp_sdram.c</FileName>
               <FileType>1</FileType>
               <FilePath>../User/BSP/bsp_sdram.c</FilePath>
@@ -681,9 +683,9 @@
           <GroupName>User/common</GroupName>
           <Files>
             <File>
-              <FileName>mm_status.c</FileName>
+              <FileName>app_status.c</FileName>
               <FileType>1</FileType>
-              <FilePath>../User/common/mm_status.c</FilePath>
+              <FilePath>../User/common/app_status.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1435,18 +1437,16 @@
       </Groups>
     </Target>
   </Targets>
-
   <RTE>
-    <apis/>
+    <apis />
     <components>
       <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="4.3.0" condition="CMSIS Core">
-        <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="4.5.0"/>
+        <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="4.5.0" />
         <targetInfos>
-          <targetInfo name="MaskMachine_H743"/>
+          <targetInfo name="MaskMachine_H743" />
         </targetInfos>
       </component>
     </components>
-    <files/>
+    <files />
   </RTE>
-
 </Project>

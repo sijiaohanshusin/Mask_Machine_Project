@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "mm_status.h"
+#include "app_status.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,8 +22,8 @@ typedef struct
     char product_id[5];
 } bsp_touch_state_t;
 
-mm_status_t Bsp_Touch_Init(void);
-mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state);
+app_status_t Bsp_Touch_Init(void);
+app_status_t Bsp_Touch_Read(bsp_touch_state_t *state);
 uint8_t Bsp_Touch_IsReady(void);
 
 #ifdef __cplusplus

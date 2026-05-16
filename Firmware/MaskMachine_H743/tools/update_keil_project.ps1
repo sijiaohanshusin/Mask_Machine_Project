@@ -12,7 +12,7 @@ try {
     $groupsNode = $target.Groups
 
     $includeAdd = @(
-        '../User/Runtime',
+        '../User/App',
         '../User/BSP',
         '../User/common',
         '../User/Drivers',
@@ -58,7 +58,7 @@ try {
     }
 
     $legacyAppGroup = 'User/' + 'App'
-    foreach ($name in @($legacyAppGroup, 'User/Runtime', 'User/BSP', 'User/common', 'User/Drivers', 'User/Fonts', 'User/Services', 'Middlewares/LVGL')) {
+    foreach ($name in @($legacyAppGroup, 'User/App', 'User/BSP', 'User/common', 'User/Drivers', 'User/Fonts', 'User/Services', 'Middlewares/LVGL')) {
         foreach ($existing in @($groupsNode.Group | Where-Object { $_.GroupName -eq $name })) {
             [void]$groupsNode.RemoveChild($existing)
         }
@@ -92,7 +92,7 @@ try {
         return '../' + $rel
     }
 
-    foreach ($dir in @('Runtime', 'BSP', 'common', 'Drivers', 'Fonts', 'Services')) {
+    foreach ($dir in @('App', 'BSP', 'common', 'Drivers', 'Fonts', 'Services')) {
         if (-not (Test-Path ".\User\$dir")) {
             continue
         }

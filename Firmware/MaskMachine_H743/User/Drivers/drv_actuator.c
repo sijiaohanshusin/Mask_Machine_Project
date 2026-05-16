@@ -2,16 +2,16 @@
 
 static drv_actuator_state_t s_state = DRV_ACTUATOR_IDLE;
 
-mm_status_t Drv_Actuator_Init(void)
+app_status_t Drv_Actuator_Init(void)
 {
     s_state = DRV_ACTUATOR_IDLE;
-    return MM_OK;
+    return APP_OK;
 }
 
-mm_status_t Drv_Actuator_DispenseOne(void)
+app_status_t Drv_Actuator_DispenseOne(void)
 {
     s_state = DRV_ACTUATOR_IDLE;
-    return MM_OK;
+    return APP_OK;
 }
 
 drv_actuator_state_t Drv_Actuator_GetState(void)

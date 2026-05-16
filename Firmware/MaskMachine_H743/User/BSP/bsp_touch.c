@@ -45,7 +45,7 @@ static void Gt9xxx_ResetPulse(void);
 static uint8_t Gt9xxx_MapPoint(uint16_t raw_x, uint16_t raw_y, uint16_t *x, uint16_t *y);
 static uint8_t Gt9xxx_TryMap(uint16_t cand_x, uint16_t cand_y, uint16_t *x, uint16_t *y, uint8_t *valid);
 
-mm_status_t Bsp_Touch_Init(void)
+app_status_t Bsp_Touch_Init(void)
 {
     uint8_t ctrl;
     uint8_t clear = 0u;
@@ -63,7 +63,7 @@ mm_status_t Bsp_Touch_Init(void)
         {
             s_ready = 0u;
             (void)Bsp_Log_Printf("[touch] GT9XXX PID read failed on both addresses\r\n");
-            return MM_ERR_NOT_READY;
+            return APP_ERR_NOT_READY;
         }
     }
 
@@ -85,10 +85,10 @@ mm_status_t Bsp_Touch_Init(void)
     (void)Gt9xxx_WriteReg(GT9XXX_REG_STATUS, &clear, 1U);
 
     s_ready = 1u;
-    return MM_OK;
+    return APP_OK;
 }
 
-mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
+app_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
 {
     uint8_t status;
     uint8_t point[GT9XXX_POINT_BYTES];
@@ -99,7 +99,7 @@ mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
 
     if (state == NULL)
     {
-        return MM_ERR_INVALID_ARG;
+        return APP_ERR_INVALID_ARG;
     }
 
     (void)memset(state, 0, sizeof(*state));
@@ -108,12 +108,12 @@ mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
 
     if (s_ready == 0u)
     {
-        return MM_ERR_NOT_READY;
+        return APP_ERR_NOT_READY;
     }
 
     if (Gt9xxx_ReadReg(GT9XXX_REG_STATUS, &status, 1U) != 0u)
     {
-        return MM_ERR_HW;
+        return APP_ERR_HW;
     }
     state->status = status;
     s_read_count++;
@@ -129,7 +129,7 @@ mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
     if ((status & 0x80u) == 0u)
     {
         s_last_pressed = 0u;
-        return MM_OK;
+        return APP_OK;
     }
 
     point_count = status & 0x0Fu;
@@ -137,7 +137,7 @@ mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
     {
         (void)Gt9xxx_WriteReg(GT9XXX_REG_STATUS, &clear, 1U);
         s_last_pressed = 0u;
-        return MM_OK;
+        return APP_OK;
     }
 
     if (point_count == 0u)
@@ -147,12 +147,12 @@ mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
                              (unsigned int)status,
                              (unsigned int)Touch_I2c_ReadInt());
         s_last_pressed = 0u;
-        return MM_OK;
+        return APP_OK;
     }
 
     if (Gt9xxx_ReadReg(GT9XXX_REG_POINT1, point, sizeof(point)) != 0u)
     {
-        return MM_ERR_HW;
+        return APP_ERR_HW;
     }
     (void)Gt9xxx_WriteReg(GT9XXX_REG_STATUS, &clear, 1U);
 
@@ -185,7 +185,7 @@ mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
                                  (unsigned int)status);
         }
         s_last_pressed = 0u;
-        return MM_OK;
+        return APP_OK;
     }
 
     state->pressed = 1u;
@@ -200,7 +200,7 @@ mm_status_t Bsp_Touch_Read(bsp_touch_state_t *state)
                              (unsigned int)status);
     }
     s_last_pressed = 1u;
-    return MM_OK;
+    return APP_OK;
 }
 
 uint8_t Bsp_Touch_IsReady(void)

@@ -1,7 +1,7 @@
 #ifndef SVC_UI_H
 #define SVC_UI_H
 
-#include "mm_types.h"
+#include "app_types.h"
 #include "svc_diag.h"
 #include "svc_dispenser.h"
 #include "svc_environment.h"
@@ -28,9 +28,9 @@ typedef struct
     svc_ui_connectivity_snapshot_t connectivity;
 } svc_ui_snapshot_t;
 
-mm_status_t Svc_Ui_Init(void);
-mm_status_t Svc_Ui_PostEvent(const mm_event_t *event);
-mm_status_t Svc_Ui_SetSnapshot(const svc_ui_snapshot_t *snapshot);
+app_status_t Svc_Ui_Init(void);
+app_status_t Svc_Ui_PostEvent(const app_event_t *event);
+app_status_t Svc_Ui_SetSnapshot(const svc_ui_snapshot_t *snapshot);
 void Svc_Ui_Process(uint32_t elapsed_ms);
 
 #ifdef __cplusplus

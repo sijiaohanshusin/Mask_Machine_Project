@@ -43,14 +43,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-volatile mm_fault_record_t g_mm_fault_record;
+volatile app_fault_record_t g_app_fault_record;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 static void Fault_Blink(void);
-void Mm_Fault_HandlerC(uint32_t *stack, uint32_t exc_return, uint32_t fault_id);
+void App_Fault_HandlerC(uint32_t *stack, uint32_t exc_return, uint32_t fault_id);
 
 /* USER CODE END PFP */
 
@@ -58,49 +58,49 @@ void Mm_Fault_HandlerC(uint32_t *stack, uint32_t exc_return, uint32_t fault_id);
 /* USER CODE BEGIN 0 */
 static void Fault_Record(uint32_t *stack, uint32_t exc_return, uint32_t fault_id)
 {
-  g_mm_fault_record.magic = MM_FAULT_MAGIC;
-  g_mm_fault_record.fault_id = fault_id;
-  g_mm_fault_record.exc_return = exc_return;
+  g_app_fault_record.magic = APP_FAULT_MAGIC;
+  g_app_fault_record.fault_id = fault_id;
+  g_app_fault_record.exc_return = exc_return;
 
   if (stack != NULL)
   {
-    g_mm_fault_record.r0 = stack[0];
-    g_mm_fault_record.r1 = stack[1];
-    g_mm_fault_record.r2 = stack[2];
-    g_mm_fault_record.r3 = stack[3];
-    g_mm_fault_record.r12 = stack[4];
-    g_mm_fault_record.lr = stack[5];
-    g_mm_fault_record.pc = stack[6];
-    g_mm_fault_record.xpsr = stack[7];
+    g_app_fault_record.r0 = stack[0];
+    g_app_fault_record.r1 = stack[1];
+    g_app_fault_record.r2 = stack[2];
+    g_app_fault_record.r3 = stack[3];
+    g_app_fault_record.r12 = stack[4];
+    g_app_fault_record.lr = stack[5];
+    g_app_fault_record.pc = stack[6];
+    g_app_fault_record.xpsr = stack[7];
   }
   else
   {
-    g_mm_fault_record.r0 = 0u;
-    g_mm_fault_record.r1 = 0u;
-    g_mm_fault_record.r2 = 0u;
-    g_mm_fault_record.r3 = 0u;
-    g_mm_fault_record.r12 = 0u;
-    g_mm_fault_record.lr = 0u;
-    g_mm_fault_record.pc = 0u;
-    g_mm_fault_record.xpsr = 0u;
+    g_app_fault_record.r0 = 0u;
+    g_app_fault_record.r1 = 0u;
+    g_app_fault_record.r2 = 0u;
+    g_app_fault_record.r3 = 0u;
+    g_app_fault_record.r12 = 0u;
+    g_app_fault_record.lr = 0u;
+    g_app_fault_record.pc = 0u;
+    g_app_fault_record.xpsr = 0u;
   }
 
-  g_mm_fault_record.cfsr = SCB->CFSR;
-  g_mm_fault_record.hfsr = SCB->HFSR;
-  g_mm_fault_record.dfsr = SCB->DFSR;
-  g_mm_fault_record.afsr = SCB->AFSR;
-  g_mm_fault_record.mmfar = SCB->MMFAR;
-  g_mm_fault_record.bfar = SCB->BFAR;
-  g_mm_fault_record.icsr = SCB->ICSR;
-  g_mm_fault_record.shcsr = SCB->SHCSR;
-  g_mm_fault_record.control = __get_CONTROL();
-  g_mm_fault_record.msp = __get_MSP();
-  g_mm_fault_record.psp = __get_PSP();
-  g_mm_fault_record.primask = __get_PRIMASK();
-  g_mm_fault_record.basepri = __get_BASEPRI();
+  g_app_fault_record.cfsr = SCB->CFSR;
+  g_app_fault_record.hfsr = SCB->HFSR;
+  g_app_fault_record.dfsr = SCB->DFSR;
+  g_app_fault_record.afsr = SCB->AFSR;
+  g_app_fault_record.mmfar = SCB->MMFAR;
+  g_app_fault_record.bfar = SCB->BFAR;
+  g_app_fault_record.icsr = SCB->ICSR;
+  g_app_fault_record.shcsr = SCB->SHCSR;
+  g_app_fault_record.control = __get_CONTROL();
+  g_app_fault_record.msp = __get_MSP();
+  g_app_fault_record.psp = __get_PSP();
+  g_app_fault_record.primask = __get_PRIMASK();
+  g_app_fault_record.basepri = __get_BASEPRI();
 }
 
-void Mm_Fault_HandlerC(uint32_t *stack, uint32_t exc_return, uint32_t fault_id)
+void App_Fault_HandlerC(uint32_t *stack, uint32_t exc_return, uint32_t fault_id)
 {
   __disable_irq();
   Fault_Record(stack, exc_return, fault_id);
@@ -151,7 +151,7 @@ extern DMA2D_HandleTypeDef g_dma2d_handle;
 void NMI_Handler(void)
 {
   /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-  Mm_Fault_HandlerC(0, 0u, MM_FAULT_NMI);
+  App_Fault_HandlerC(0, 0u, APP_FAULT_NMI);
 
   /* USER CODE END NonMaskableInt_IRQn 0 */
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
@@ -166,14 +166,14 @@ void NMI_Handler(void)
   */
 __asm void HardFault_Handler(void)
 {
-  IMPORT Mm_Fault_HandlerC
+  IMPORT App_Fault_HandlerC
   TST LR, #4
   ITE EQ
   MRSEQ R0, MSP
   MRSNE R0, PSP
   MOV R1, LR
   MOVS R2, #2
-  B Mm_Fault_HandlerC
+  B App_Fault_HandlerC
 }
 #if 0
 void HardFault_Handler(void)
@@ -195,14 +195,14 @@ void HardFault_Handler(void)
   */
 __asm void MemManage_Handler(void)
 {
-  IMPORT Mm_Fault_HandlerC
+  IMPORT App_Fault_HandlerC
   TST LR, #4
   ITE EQ
   MRSEQ R0, MSP
   MRSNE R0, PSP
   MOV R1, LR
   MOVS R2, #3
-  B Mm_Fault_HandlerC
+  B App_Fault_HandlerC
 }
 #if 0
 void MemManage_Handler(void)
@@ -224,14 +224,14 @@ void MemManage_Handler(void)
   */
 __asm void BusFault_Handler(void)
 {
-  IMPORT Mm_Fault_HandlerC
+  IMPORT App_Fault_HandlerC
   TST LR, #4
   ITE EQ
   MRSEQ R0, MSP
   MRSNE R0, PSP
   MOV R1, LR
   MOVS R2, #4
-  B Mm_Fault_HandlerC
+  B App_Fault_HandlerC
 }
 #if 0
 void BusFault_Handler(void)
@@ -253,14 +253,14 @@ void BusFault_Handler(void)
   */
 __asm void UsageFault_Handler(void)
 {
-  IMPORT Mm_Fault_HandlerC
+  IMPORT App_Fault_HandlerC
   TST LR, #4
   ITE EQ
   MRSEQ R0, MSP
   MRSNE R0, PSP
   MOV R1, LR
   MOVS R2, #5
-  B Mm_Fault_HandlerC
+  B App_Fault_HandlerC
 }
 #if 0
 void UsageFault_Handler(void)
@@ -358,12 +358,12 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
   (void)xTask;
   (void)pcTaskName;
-  Mm_Fault_HandlerC(0, 0u, MM_FAULT_STACK);
+  App_Fault_HandlerC(0, 0u, APP_FAULT_STACK);
 }
 
 void vApplicationMallocFailedHook(void)
 {
-  Mm_Fault_HandlerC(0, 0u, MM_FAULT_MALLOC);
+  App_Fault_HandlerC(0, 0u, APP_FAULT_MALLOC);
 }
 
 /* USER CODE END 1 */

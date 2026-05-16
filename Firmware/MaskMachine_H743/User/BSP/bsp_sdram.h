@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "mm_status.h"
+#include "app_status.h"
 #include "stm32h7xx_hal.h"
 
 #ifdef __cplusplus
@@ -15,8 +15,8 @@ extern "C" {
 
 extern SDRAM_HandleTypeDef g_sdram_handle;
 
-mm_status_t Bsp_Sdram_Init(void);
-mm_status_t Bsp_Sdram_SelfTest(void);
+app_status_t Bsp_Sdram_Init(void);
+app_status_t Bsp_Sdram_SelfTest(void);
 uint8_t Bsp_Sdram_IsReady(void);
 SDRAM_HandleTypeDef *Bsp_Sdram_GetHandle(void);
 

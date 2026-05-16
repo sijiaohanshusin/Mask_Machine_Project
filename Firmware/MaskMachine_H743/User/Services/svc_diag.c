@@ -6,12 +6,12 @@
 
 static svc_diag_snapshot_t s_diag;
 
-mm_status_t Svc_Diag_Init(void)
+app_status_t Svc_Diag_Init(void)
 {
     s_diag.uptime_ms = 0u;
     s_diag.heartbeat_count = 0u;
-    s_diag.last_error = MM_OK;
-    return MM_OK;
+    s_diag.last_error = APP_OK;
+    return APP_OK;
 }
 
 void Svc_Diag_Heartbeat(void)
@@ -20,21 +20,21 @@ void Svc_Diag_Heartbeat(void)
     s_diag.heartbeat_count++;
 }
 
-mm_status_t Svc_Diag_GetSnapshot(svc_diag_snapshot_t *snapshot)
+app_status_t Svc_Diag_GetSnapshot(svc_diag_snapshot_t *snapshot)
 {
     if (snapshot == NULL)
     {
-        return MM_ERR_INVALID_ARG;
+        return APP_ERR_INVALID_ARG;
     }
 
     s_diag.uptime_ms = Bsp_Time_NowMs();
     *snapshot = s_diag;
-    return MM_OK;
+    return APP_OK;
 }
 
-void Svc_Diag_SetLastError(mm_status_t status)
+void Svc_Diag_SetLastError(app_status_t status)
 {
-    if (status != MM_OK)
+    if (status != APP_OK)
     {
         s_diag.last_error = status;
     }

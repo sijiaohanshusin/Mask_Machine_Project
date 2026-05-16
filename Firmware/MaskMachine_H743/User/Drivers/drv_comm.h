@@ -3,14 +3,14 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "mm_status.h"
+#include "app_status.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-mm_status_t Drv_Comm_Init(void);
-mm_status_t Drv_Comm_SendHealth(const uint8_t *payload, size_t length);
+app_status_t Drv_Comm_Init(void);
+app_status_t Drv_Comm_SendHealth(const uint8_t *payload, size_t length);
 
 #ifdef __cplusplus
 }

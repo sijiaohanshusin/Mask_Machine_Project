@@ -2,7 +2,7 @@
 #define DRV_ACTUATOR_H
 
 #include <stdint.h>
-#include "mm_status.h"
+#include "app_status.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,8 +15,8 @@ typedef enum
     DRV_ACTUATOR_FAULT
 } drv_actuator_state_t;
 
-mm_status_t Drv_Actuator_Init(void);
-mm_status_t Drv_Actuator_DispenseOne(void);
+app_status_t Drv_Actuator_Init(void);
+app_status_t Drv_Actuator_DispenseOne(void);
 drv_actuator_state_t Drv_Actuator_GetState(void);
 void Drv_Actuator_Process(void);
 

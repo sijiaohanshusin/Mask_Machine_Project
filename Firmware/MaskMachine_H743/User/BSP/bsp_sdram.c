@@ -12,16 +12,16 @@ SDRAM_HandleTypeDef g_sdram_handle;
 
 static uint8_t s_ready;
 
-static mm_status_t Bsp_Sdram_SendCommand(uint32_t mode, uint32_t refresh_number, uint32_t mode_register);
+static app_status_t Bsp_Sdram_SendCommand(uint32_t mode, uint32_t refresh_number, uint32_t mode_register);
 
-mm_status_t Bsp_Sdram_Init(void)
+app_status_t Bsp_Sdram_Init(void)
 {
     FMC_SDRAM_TimingTypeDef timing = {0};
-    mm_status_t ret;
+    app_status_t ret;
 
     if (s_ready != 0u)
     {
-        return MM_OK;
+        return APP_OK;
     }
 
     g_sdram_handle.Instance = FMC_SDRAM_DEVICE;
@@ -46,11 +46,11 @@ mm_status_t Bsp_Sdram_Init(void)
 
     if (HAL_SDRAM_Init(&g_sdram_handle, &timing) != HAL_OK)
     {
-        return MM_ERR_HW;
+        return APP_ERR_HW;
     }
 
     ret = Bsp_Sdram_SendCommand(FMC_SDRAM_CMD_CLK_ENABLE, 1U, 0U);
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
@@ -58,13 +58,13 @@ mm_status_t Bsp_Sdram_Init(void)
     HAL_Delay(1U);
 
     ret = Bsp_Sdram_SendCommand(FMC_SDRAM_CMD_PALL, 1U, 0U);
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
 
     ret = Bsp_Sdram_SendCommand(FMC_SDRAM_CMD_AUTOREFRESH_MODE, 8U, 0U);
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
@@ -76,21 +76,21 @@ mm_status_t Bsp_Sdram_Init(void)
                                 SDRAM_MODEREG_CAS_LATENCY_2 |
                                 SDRAM_MODEREG_OPERATING_MODE_STD |
                                 SDRAM_MODEREG_WRITEBURST_SINGLE);
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
 
     if (HAL_SDRAM_ProgramRefreshRate(&g_sdram_handle, SDRAM_REFRESH_COUNT) != HAL_OK)
     {
-        return MM_ERR_HW;
+        return APP_ERR_HW;
     }
 
     s_ready = 1u;
-    return MM_OK;
+    return APP_OK;
 }
 
-mm_status_t Bsp_Sdram_SelfTest(void)
+app_status_t Bsp_Sdram_SelfTest(void)
 {
     static const uint32_t patterns[] = {
         0x00000000UL,
@@ -106,7 +106,7 @@ mm_status_t Bsp_Sdram_SelfTest(void)
 
     if (s_ready == 0u)
     {
-        return MM_ERR_NOT_READY;
+        return APP_ERR_NOT_READY;
     }
 
     for (i = 0U; i < 16U; i++)
@@ -129,7 +129,7 @@ mm_status_t Bsp_Sdram_SelfTest(void)
                 {
                     mem[i] = original[i];
                 }
-                return MM_ERR_HW;
+                return APP_ERR_HW;
             }
         }
     }
@@ -139,7 +139,7 @@ mm_status_t Bsp_Sdram_SelfTest(void)
         mem[i] = original[i];
     }
 
-    return MM_OK;
+    return APP_OK;
 }
 
 uint8_t Bsp_Sdram_IsReady(void)
@@ -203,7 +203,7 @@ void HAL_SDRAM_MspInit(SDRAM_HandleTypeDef *hsdram)
     HAL_EnableCompensationCell();
 }
 
-static mm_status_t Bsp_Sdram_SendCommand(uint32_t mode, uint32_t refresh_number, uint32_t mode_register)
+static app_status_t Bsp_Sdram_SendCommand(uint32_t mode, uint32_t refresh_number, uint32_t mode_register)
 {
     FMC_SDRAM_CommandTypeDef command = {0};
 
@@ -212,5 +212,5 @@ static mm_status_t Bsp_Sdram_SendCommand(uint32_t mode, uint32_t refresh_number,
     command.AutoRefreshNumber = refresh_number;
     command.ModeRegisterDefinition = mode_register;
 
-    return (HAL_SDRAM_SendCommand(&g_sdram_handle, &command, SDRAM_TIMEOUT_MS) == HAL_OK) ? MM_OK : MM_ERR_HW;
+    return (HAL_SDRAM_SendCommand(&g_sdram_handle, &command, SDRAM_TIMEOUT_MS) == HAL_OK) ? APP_OK : APP_ERR_HW;
 }

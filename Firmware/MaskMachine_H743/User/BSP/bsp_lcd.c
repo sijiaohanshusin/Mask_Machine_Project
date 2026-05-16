@@ -17,25 +17,25 @@ static uint8_t s_ready;
 static volatile uint32_t s_ltdc_error_count;
 static volatile uint32_t s_dma2d_error_count;
 
-static mm_status_t Bsp_Lcd_ConfigPixelClock(void);
-static mm_status_t Bsp_Lcd_InitDma2d(void);
-static mm_status_t Bsp_Lcd_InitLtdc(void);
+static app_status_t Bsp_Lcd_ConfigPixelClock(void);
+static app_status_t Bsp_Lcd_InitDma2d(void);
+static app_status_t Bsp_Lcd_InitLtdc(void);
 static void Bsp_Lcd_InitControlPins(void);
 static void Bsp_Lcd_ResetPanel(void);
 
-mm_status_t Bsp_Lcd_Init(void)
+app_status_t Bsp_Lcd_Init(void)
 {
-    mm_status_t ret;
+    app_status_t ret;
 
     if (s_ready != 0u)
     {
-        return MM_OK;
+        return APP_OK;
     }
 
     Bsp_Lcd_ProbeBacklightOn();
 
     ret = Bsp_Lcd_ConfigPixelClock();
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
@@ -43,20 +43,20 @@ mm_status_t Bsp_Lcd_Init(void)
     Bsp_Lcd_FillRgb565(BSP_LCD_BLACK_RGB565);
 
     ret = Bsp_Lcd_InitDma2d();
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
 
     ret = Bsp_Lcd_InitLtdc();
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
 
     Bsp_Lcd_SetBacklight(1u);
     s_ready = 1u;
-    return MM_OK;
+    return APP_OK;
 }
 
 void Bsp_Lcd_SetBacklight(uint8_t on)
@@ -218,7 +218,7 @@ void HAL_DMA2D_ErrorCallback(DMA2D_HandleTypeDef *hdma2d)
     s_dma2d_error_count++;
 }
 
-static mm_status_t Bsp_Lcd_ConfigPixelClock(void)
+static app_status_t Bsp_Lcd_ConfigPixelClock(void)
 {
     RCC_PeriphCLKInitTypeDef periph_clk = {0};
 
@@ -232,10 +232,10 @@ static mm_status_t Bsp_Lcd_ConfigPixelClock(void)
     periph_clk.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
     periph_clk.PLL3.PLL3FRACN = 0U;
 
-    return (HAL_RCCEx_PeriphCLKConfig(&periph_clk) == HAL_OK) ? MM_OK : MM_ERR_HW;
+    return (HAL_RCCEx_PeriphCLKConfig(&periph_clk) == HAL_OK) ? APP_OK : APP_ERR_HW;
 }
 
-static mm_status_t Bsp_Lcd_InitDma2d(void)
+static app_status_t Bsp_Lcd_InitDma2d(void)
 {
     g_dma2d_handle.Instance = DMA2D;
     g_dma2d_handle.Init.Mode = DMA2D_M2M;
@@ -245,10 +245,10 @@ static mm_status_t Bsp_Lcd_InitDma2d(void)
     g_dma2d_handle.Init.RedBlueSwap = DMA2D_RB_REGULAR;
     g_dma2d_handle.Init.LineOffsetMode = DMA2D_LOM_PIXELS;
 
-    return (HAL_DMA2D_Init(&g_dma2d_handle) == HAL_OK) ? MM_OK : MM_ERR_HW;
+    return (HAL_DMA2D_Init(&g_dma2d_handle) == HAL_OK) ? APP_OK : APP_ERR_HW;
 }
 
-static mm_status_t Bsp_Lcd_InitLtdc(void)
+static app_status_t Bsp_Lcd_InitLtdc(void)
 {
     LTDC_LayerCfgTypeDef layer = {0};
 
@@ -271,7 +271,7 @@ static mm_status_t Bsp_Lcd_InitLtdc(void)
 
     if (HAL_LTDC_Init(&g_ltdc_handle) != HAL_OK)
     {
-        return MM_ERR_HW;
+        return APP_ERR_HW;
     }
 
     layer.WindowX0 = 0U;
@@ -292,11 +292,11 @@ static mm_status_t Bsp_Lcd_InitLtdc(void)
 
     if (HAL_LTDC_ConfigLayer(&g_ltdc_handle, &layer, 0U) != HAL_OK)
     {
-        return MM_ERR_HW;
+        return APP_ERR_HW;
     }
 
     __HAL_LTDC_ENABLE_IT(&g_ltdc_handle, LTDC_IT_TE | LTDC_IT_FU);
-    return MM_OK;
+    return APP_OK;
 }
 
 static void Bsp_Lcd_InitControlPins(void)

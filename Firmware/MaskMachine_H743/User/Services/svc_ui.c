@@ -6,7 +6,7 @@
 #include "bsp_display_ltdc.h"
 #include "bsp_lcd.h"
 #include "lvgl.h"
-#include "mm_runtime.h"
+#include "app_main.h"
 
 LV_FONT_DECLARE(mm_font_zh_16);
 
@@ -152,82 +152,82 @@ static void Ui_UpdateEnvironment(void);
 static void Ui_UpdateConnectivity(void);
 static void Ui_UpdateInventory(void);
 static void Ui_UpdateDeviceStatus(void);
-static const char *Ui_StatusShort(mm_status_t status);
+static const char *Ui_StatusShort(app_status_t status);
 static uint8_t Ui_Percent(uint16_t remaining, uint16_t total);
 static void Ui_FormatClock(uint32_t uptime_ms, char *buffer, uint32_t buffer_size);
 
-mm_status_t Svc_Ui_Init(void)
+app_status_t Svc_Ui_Init(void)
 {
-    mm_status_t ret;
+    app_status_t ret;
 
     if (s_ui_ready != 0u)
     {
-        return MM_OK;
+        return APP_OK;
     }
 
     ret = Bsp_DisplayLtdc_Init();
-    if (ret != MM_OK)
+    if (ret != APP_OK)
     {
         return ret;
     }
 
     Ui_Create();
     s_ui_ready = 1u;
-    return MM_OK;
+    return APP_OK;
 }
 
-mm_status_t Svc_Ui_PostEvent(const mm_event_t *event)
+app_status_t Svc_Ui_PostEvent(const app_event_t *event)
 {
     if (event == NULL)
     {
-        return MM_ERR_INVALID_ARG;
+        return APP_ERR_INVALID_ARG;
     }
 
     if (s_ui_ready == 0u)
     {
-        return MM_ERR_NOT_READY;
+        return APP_ERR_NOT_READY;
     }
 
     switch (event->type)
     {
-        case MM_EVENT_DISPENSE_REQUEST:
+        case APP_EVENT_DISPENSE_REQUEST:
             Ui_SetLog(UI_TXT_LOG_REQ);
             break;
 
-        case MM_EVENT_AUTH_PRESENT:
+        case APP_EVENT_AUTH_PRESENT:
             Ui_SetLog(UI_TXT_LOG_AUTH);
             break;
 
-        case MM_EVENT_ENV_UPDATED:
+        case APP_EVENT_ENV_UPDATED:
             Ui_UpdateEnvironment();
             break;
 
-        case MM_EVENT_FAULT:
+        case APP_EVENT_FAULT:
             Ui_ShowError(UI_TXT_FAULT_EVENT);
             break;
 
-        case MM_EVENT_NONE:
+        case APP_EVENT_NONE:
         default:
             break;
     }
 
-    return MM_OK;
+    return APP_OK;
 }
 
-mm_status_t Svc_Ui_SetSnapshot(const svc_ui_snapshot_t *snapshot)
+app_status_t Svc_Ui_SetSnapshot(const svc_ui_snapshot_t *snapshot)
 {
     char text[96];
 
     if (snapshot == NULL)
     {
-        return MM_ERR_INVALID_ARG;
+        return APP_ERR_INVALID_ARG;
     }
 
     s_snapshot = *snapshot;
 
     if (s_ui_ready == 0u)
     {
-        return MM_ERR_NOT_READY;
+        return APP_ERR_NOT_READY;
     }
 
     Ui_FormatClock(s_snapshot.diag.uptime_ms, text, sizeof(text));
@@ -250,7 +250,7 @@ mm_status_t Svc_Ui_SetSnapshot(const svc_ui_snapshot_t *snapshot)
         Ui_ShowError(Ui_StatusShort(s_snapshot.dispenser.last_status));
     }
 
-    return MM_OK;
+    return APP_OK;
 }
 
 void Svc_Ui_Process(uint32_t elapsed_ms)
@@ -297,7 +297,7 @@ static void Ui_CreateHeader(lv_obj_t *frame)
     (void)Ui_CreateLabel(header, UI_TXT_TITLE, 62, 18, &mm_font_zh_16, 0xF8FAFC);
 
     chip = Ui_CreatePill(header, 286, 16, 142, 28, 0x10384A, 0x0E7490);
-    (void)Ui_CreateLabel(chip, "H743 Runtime", 16, 7, &lv_font_montserrat_14, 0x22D3EE);
+    (void)Ui_CreateLabel(chip, "H743 APP", 28, 7, &lv_font_montserrat_14, 0x22D3EE);
 
     (void)Ui_CreateDot(header, 666, 21, 0x4ADE80);
     s_header_mqtt_label = Ui_CreateLabel(header, UI_TXT_MQTT_UNSET, 686, 20, &mm_font_zh_16, 0xE2E8F0);
@@ -623,8 +623,8 @@ static void Ui_RefreshLogLine(void)
 
 static void Ui_StartTouchDemo(void)
 {
-    mm_event_t runtime_event = {
-        .type = MM_EVENT_DISPENSE_REQUEST,
+    app_event_t app_event = {
+        .type = APP_EVENT_DISPENSE_REQUEST,
         .arg0 = 0u,
         .arg1 = 0u
     };
@@ -645,7 +645,7 @@ static void Ui_StartTouchDemo(void)
     lv_obj_add_flag(s_success_label, LV_OBJ_FLAG_HIDDEN);
     Ui_SetLog(UI_TXT_LOG_TOUCH);
 
-    if (Mm_Runtime_PostEvent(&runtime_event, 0u) != MM_OK)
+    if (App_Main_PostEvent(&app_event, 0u) != APP_OK)
     {
         Ui_ShowError(UI_TXT_QUEUE_NOT_READY);
     }
@@ -776,7 +776,7 @@ static void Ui_UpdateEnvironment(void)
     uint16_t pm25_x10;
     uint16_t pm25;
 
-    env_ready = ((s_snapshot.environment.last_status == MM_OK) &&
+    env_ready = ((s_snapshot.environment.last_status == APP_OK) &&
                  (s_snapshot.environment.sample.valid != 0u)) ? 1u : 0u;
 
     if (env_ready == 0u)
@@ -893,28 +893,28 @@ static void Ui_UpdateDeviceStatus(void)
 {
     Ui_SetLabelTextIfChanged(s_controller_status_label, UI_TXT_CTRL_OK);
     Ui_SetLabelTextIfChanged(s_actuator_status_label,
-                             (s_snapshot.dispenser.last_status == MM_OK) ? UI_TXT_MOTOR_DEMO : UI_TXT_MOTOR_ERR);
+                             (s_snapshot.dispenser.last_status == APP_OK) ? UI_TXT_MOTOR_DEMO : UI_TXT_MOTOR_ERR);
     Ui_SetLabelTextIfChanged(s_env_module_status_label,
-                             (s_snapshot.environment.last_status == MM_OK) ? UI_TXT_ENV_OK : UI_TXT_ENV_ERR);
+                             (s_snapshot.environment.last_status == APP_OK) ? UI_TXT_ENV_OK : UI_TXT_ENV_ERR);
 }
 
-static const char *Ui_StatusShort(mm_status_t status)
+static const char *Ui_StatusShort(app_status_t status)
 {
     switch (status)
     {
-        case MM_OK:
+        case APP_OK:
             return "OK";
-        case MM_ERR_NOT_READY:
+        case APP_ERR_NOT_READY:
             return "NOT READY";
-        case MM_ERR_NOT_IMPLEMENTED:
+        case APP_ERR_NOT_IMPLEMENTED:
             return "NOT IMPLEMENTED";
-        case MM_ERR_TIMEOUT:
+        case APP_ERR_TIMEOUT:
             return "TIMEOUT";
-        case MM_ERR_INVALID_ARG:
+        case APP_ERR_INVALID_ARG:
             return "INVALID ARG";
-        case MM_ERR_BUSY:
+        case APP_ERR_BUSY:
             return "BUSY";
-        case MM_ERR_HW:
+        case APP_ERR_HW:
         default:
             return "HW ERROR";
     }

@@ -58,26 +58,26 @@ typedef struct
   uint32_t psp;
   uint32_t primask;
   uint32_t basepri;
-} mm_fault_record_t;
+} app_fault_record_t;
 
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-#define MM_FAULT_MAGIC      (0xFA17FA17UL)
-#define MM_FAULT_NMI        (1UL)
-#define MM_FAULT_HARD       (2UL)
-#define MM_FAULT_MEMMANAGE  (3UL)
-#define MM_FAULT_BUS        (4UL)
-#define MM_FAULT_USAGE      (5UL)
-#define MM_FAULT_STACK      (6UL)
-#define MM_FAULT_MALLOC     (7UL)
+#define APP_FAULT_MAGIC      (0xFA17FA17UL)
+#define APP_FAULT_NMI        (1UL)
+#define APP_FAULT_HARD       (2UL)
+#define APP_FAULT_MEMMANAGE  (3UL)
+#define APP_FAULT_BUS        (4UL)
+#define APP_FAULT_USAGE      (5UL)
+#define APP_FAULT_STACK      (6UL)
+#define APP_FAULT_MALLOC     (7UL)
 
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-extern volatile mm_fault_record_t g_mm_fault_record;
+extern volatile app_fault_record_t g_app_fault_record;
 
 /* USER CODE END EM */
 

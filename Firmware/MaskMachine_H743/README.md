@@ -29,7 +29,7 @@ Initial STM32H743IITx firmware skeleton for the mask dispensing machine.
 - `User/BSP/`: board support wrappers, including SDRAM, LTDC display, and GT9XXX touch.
 - `User/Drivers/`: hardware driver abstractions and stubs.
 - `User/Services/`: business-level services.
-- `User/Runtime/`: task creation, queues, and application bootstrap.
+- `User/App/`: task creation, queues, and application bootstrap.
 
 ## Regeneration Notes
 

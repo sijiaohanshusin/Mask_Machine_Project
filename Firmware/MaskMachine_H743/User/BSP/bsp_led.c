@@ -12,34 +12,34 @@ static const bsp_led_hw_t s_leds[BSP_LED_COUNT] = {
     { LED1_GPIO_Port, LED1_Pin },
 };
 
-mm_status_t Bsp_Led_Init(void)
+app_status_t Bsp_Led_Init(void)
 {
     (void)Bsp_Led_Set(BSP_LED_0, 0u);
     (void)Bsp_Led_Set(BSP_LED_1, 0u);
-    return MM_OK;
+    return APP_OK;
 }
 
-mm_status_t Bsp_Led_Set(bsp_led_id_t led, uint8_t on)
+app_status_t Bsp_Led_Set(bsp_led_id_t led, uint8_t on)
 {
     if ((uint32_t)led >= (uint32_t)BSP_LED_COUNT)
     {
-        return MM_ERR_INVALID_ARG;
+        return APP_ERR_INVALID_ARG;
     }
 
     /* Board LEDs are active low in the vendor examples. */
     HAL_GPIO_WritePin(s_leds[led].port,
                       s_leds[led].pin,
                       (on != 0u) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-    return MM_OK;
+    return APP_OK;
 }
 
-mm_status_t Bsp_Led_Toggle(bsp_led_id_t led)
+app_status_t Bsp_Led_Toggle(bsp_led_id_t led)
 {
     if ((uint32_t)led >= (uint32_t)BSP_LED_COUNT)
     {
-        return MM_ERR_INVALID_ARG;
+        return APP_ERR_INVALID_ARG;
     }
 
     HAL_GPIO_TogglePin(s_leds[led].port, s_leds[led].pin);
-    return MM_OK;
+    return APP_OK;
 }
