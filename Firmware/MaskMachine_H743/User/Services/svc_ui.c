@@ -28,12 +28,12 @@ LV_FONT_DECLARE(mm_font_zh_16);
 #define UI_TXT_MQTT_UNSET "MQTT \346\234\252\346\216\245\345\205\245"
 #define UI_TXT_MQTT_ONLINE "MQTT \345\234\250\347\272\277"
 #define UI_TXT_MQTT_OFFLINE "MQTT \347\246\273\347\272\277"
-#define UI_TXT_PROMPT_IDLE "\347\202\271\345\207\273\345\261\217\345\271\225\345\274\200\345\247\213\345\217\226\347\275\251"
-#define UI_TXT_SUBPROMPT_IDLE "IC\345\215\241\346\214\201\347\273\255\347\233\221\345\220\254\344\270\255\357\274\214\345\210\267\345\215\241/\350\247\246\346\221\270\345\217\257\350\247\246\345\217\221    \346\216\245\345\217\243\351\242\204\347\225\231"
+#define UI_TXT_PROMPT_IDLE "\350\257\267\345\205\210\345\210\267\111\103\345\215\241"
+#define UI_TXT_SUBPROMPT_IDLE "\345\210\267\345\215\241\351\200\232\350\277\207\345\220\216\357\274\214\347\202\271\345\207\273\345\261\217\345\271\225\345\217\226\347\275\251\343\200\202"
 #define UI_TXT_CUR_STATE "\345\275\223\345\211\215\347\212\266\346\200\201"
 #define UI_TXT_WAIT_TRIGGER "\347\255\211\345\276\205\350\247\246\345\217\221"
 #define UI_TXT_QUOTA "\344\273\212\346\227\245\345\211\251\344\275\231\351\205\215\351\242\235"
-#define UI_TXT_DETAIL_IDLE "\345\267\246\344\276\247\347\224\273\351\235\242\345\217\257\350\247\246\345\217\221\344\270\200\346\254\241\346\274\224\347\244\272\345\217\221\346\224\276\343\200\202"
+#define UI_TXT_DETAIL_IDLE "\347\255\211\345\276\205\346\234\254\345\234\260\111\103\345\215\241\350\256\244\350\257\201\357\274\214\346\216\210\346\235\203\345\220\216\350\247\246\346\221\270\345\267\246\344\276\247\345\217\226\347\275\251\343\200\202"
 #define UI_TXT_ENV_TITLE "\345\256\236\346\227\266\347\216\257\345\242\203\346\204\237\347\237\245"
 #define UI_TXT_REFRESH "30s \345\210\267\346\226\260"
 #define UI_TXT_UNKNOWN "\346\234\252\347\237\245"
@@ -74,6 +74,22 @@ LV_FONT_DECLARE(mm_font_zh_16);
 #define UI_TXT_MOTOR_ERR "\347\224\265\346\234\272  ERR"
 #define UI_TXT_ENV_OK "\347\216\257\345\242\203  OK"
 #define UI_TXT_ENV_ERR "\347\216\257\345\242\203  ERR"
+#define UI_TXT_AUTH_READY "\350\256\244\350\257\201\351\200\232\350\277\207\357\274\214\350\257\267\347\202\271\345\207\273\345\217\226\347\275\251"
+#define UI_TXT_AUTH_READY_DETAIL "\111\103\345\215\241\345\267\262\346\216\210\346\235\203\357\274\214\061\065\347\247\222\345\206\205\347\202\271\345\207\273\345\261\217\345\271\225\345\256\214\346\210\220\345\217\226\347\275\251\343\200\202"
+#define UI_TXT_LOG_AUTH_GRANTED "\111\103\345\215\241\350\256\244\350\257\201\351\200\232\350\277\207\357\274\214\347\255\211\345\276\205\350\247\246\346\221\270\347\241\256\350\256\244\343\200\202"
+#define UI_TXT_LOG_AUTH_LEARNED "\347\251\272\345\272\223\351\246\226\345\215\241\345\267\262\347\231\273\350\256\260\345\271\266\346\216\210\346\235\203\343\200\202"
+#define UI_TXT_AUTH_DENIED "\346\234\252\346\216\210\346\235\203\111\103\345\215\241"
+#define UI_TXT_AUTH_DENIED_DETAIL "\346\234\254\345\234\260\345\215\241\345\272\223\346\234\252\346\211\276\345\210\260\350\257\245\345\215\241\357\274\214\350\257\267\350\201\224\347\263\273\347\256\241\347\220\206\345\221\230\347\231\273\350\256\260\343\200\202"
+#define UI_TXT_LOG_AUTH_DENIED "\111\103\345\215\241\346\234\252\346\216\210\346\235\203\357\274\214\345\267\262\346\213\222\347\273\235\345\217\226\347\275\251\343\200\202"
+#define UI_TXT_AUTH_REQUIRED "\350\257\267\345\205\210\345\210\267\111\103\345\215\241"
+#define UI_TXT_AUTH_REQUIRED_DETAIL "\345\217\226\347\275\251\345\211\215\351\234\200\350\246\201\345\256\214\346\210\220\346\234\254\345\234\260\111\103\345\215\241\350\256\244\350\257\201\343\200\202"
+#define UI_TXT_LOG_AUTH_REQUIRED "\346\234\252\346\243\200\346\265\213\345\210\260\346\234\211\346\225\210\350\256\244\350\257\201\357\274\214\344\274\232\350\257\235\346\234\252\345\273\272\347\253\213\343\200\202"
+#define UI_TXT_AUTH_TIMEOUT "\350\256\244\350\257\201\345\267\262\350\266\205\346\227\266"
+#define UI_TXT_AUTH_TIMEOUT_DETAIL "\350\257\267\351\207\215\346\226\260\345\210\267\345\215\241\345\220\216\345\234\250\061\065\347\247\222\345\206\205\347\202\271\345\207\273\345\217\226\347\275\251\343\200\202"
+#define UI_TXT_LOG_AUTH_TIMEOUT "\111\103\345\215\241\350\256\244\350\257\201\344\274\232\350\257\235\345\267\262\350\266\205\346\227\266\343\200\202"
+#define UI_TXT_AUTH_DB_ERROR "\345\215\241\345\272\223\344\270\215\345\217\257\347\224\250"
+#define UI_TXT_AUTH_DB_ERROR_DETAIL "\346\234\254\345\234\260\105\105\120\122\117\115\345\215\241\345\272\223\350\257\273\345\217\226\345\244\261\350\264\245\357\274\214\350\256\244\350\257\201\346\232\202\344\270\215\345\217\257\347\224\250\343\200\202"
+#define UI_TXT_LOG_AUTH_DB_ERROR "\346\234\254\345\234\260\345\215\241\345\272\223\345\274\202\345\270\270\357\274\214\350\256\244\350\257\201\344\270\215\345\217\257\347\224\250\343\200\202"
 
 typedef enum
 {
@@ -144,10 +160,12 @@ static void Ui_RefreshLogLine(void);
 static void Ui_StartTouchDemo(void);
 static void Ui_LeftPanelEvent(lv_event_t *event);
 static void Ui_UpdateDemo(uint32_t elapsed_ms);
+static void Ui_ShowAuthReady(uint8_t learned);
 static void Ui_ShowIdle(void);
 static void Ui_ShowSuccess(void);
 static void Ui_ShowError(const char *detail);
 static void Ui_SetProgress(uint8_t value);
+static void Ui_UpdateAuth(void);
 static void Ui_UpdateEnvironment(void);
 static void Ui_UpdateConnectivity(void);
 static void Ui_UpdateInventory(void);
@@ -198,6 +216,30 @@ app_status_t Svc_Ui_PostEvent(const app_event_t *event)
             Ui_SetLog(UI_TXT_LOG_AUTH);
             break;
 
+        case APP_EVENT_AUTH_GRANTED:
+            Ui_ShowAuthReady((uint8_t)event->arg0);
+            break;
+
+        case APP_EVENT_AUTH_DENIED:
+            Ui_ShowError(UI_TXT_AUTH_DENIED_DETAIL);
+            Ui_SetLog(UI_TXT_LOG_AUTH_DENIED);
+            break;
+
+        case APP_EVENT_AUTH_REQUIRED:
+            Ui_ShowError(UI_TXT_AUTH_REQUIRED_DETAIL);
+            Ui_SetLog(UI_TXT_LOG_AUTH_REQUIRED);
+            break;
+
+        case APP_EVENT_AUTH_TIMEOUT:
+            Ui_ShowError(UI_TXT_AUTH_TIMEOUT_DETAIL);
+            Ui_SetLog(UI_TXT_LOG_AUTH_TIMEOUT);
+            break;
+
+        case APP_EVENT_AUTH_DB_ERROR:
+            Ui_ShowError(UI_TXT_AUTH_DB_ERROR_DETAIL);
+            Ui_SetLog(UI_TXT_LOG_AUTH_DB_ERROR);
+            break;
+
         case APP_EVENT_ENV_UPDATED:
             Ui_UpdateEnvironment();
             break;
@@ -233,6 +275,7 @@ app_status_t Svc_Ui_SetSnapshot(const svc_ui_snapshot_t *snapshot)
     Ui_FormatClock(s_snapshot.diag.uptime_ms, text, sizeof(text));
     Ui_SetLabelTextIfChanged(s_clock_label, text);
 
+    Ui_UpdateAuth();
     Ui_UpdateConnectivity();
     Ui_UpdateInventory();
     Ui_UpdateEnvironment();
@@ -716,6 +759,40 @@ static void Ui_UpdateDemo(uint32_t elapsed_ms)
     }
 }
 
+static void Ui_ShowAuthReady(uint8_t learned)
+{
+    char text[160];
+    const drv_rfid_card_t *card = &s_snapshot.auth.last_card;
+
+    s_demo_state = UI_DEMO_IDLE;
+    s_demo_elapsed_ms = 0u;
+    Ui_SetLabelTextIfChanged(s_prompt_label, UI_TXT_AUTH_READY);
+    Ui_SetLabelTextIfChanged(s_subprompt_label, UI_TXT_SUBPROMPT_IDLE);
+    Ui_SetLabelTextIfChanged(s_status_title_label, UI_TXT_AUTH_READY);
+
+    if ((s_snapshot.auth.last_uid_valid != 0u) && (card->uid_len >= 4u))
+    {
+        (void)snprintf(text,
+                       sizeof(text),
+                       "%s UID **** %02X %02X %02X %02X",
+                       UI_TXT_AUTH_READY_DETAIL,
+                       (unsigned int)card->uid[card->uid_len - 4u],
+                       (unsigned int)card->uid[card->uid_len - 3u],
+                       (unsigned int)card->uid[card->uid_len - 2u],
+                       (unsigned int)card->uid[card->uid_len - 1u]);
+        Ui_SetLabelTextIfChanged(s_status_detail_label, text);
+    }
+    else
+    {
+        Ui_SetLabelTextIfChanged(s_status_detail_label, UI_TXT_AUTH_READY_DETAIL);
+    }
+
+    Ui_SetProgress(35u);
+    lv_obj_add_flag(s_scan_line, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(s_success_label, LV_OBJ_FLAG_HIDDEN);
+    Ui_SetLog((learned != 0u) ? UI_TXT_LOG_AUTH_LEARNED : UI_TXT_LOG_AUTH_GRANTED);
+}
+
 static void Ui_ShowIdle(void)
 {
     s_demo_state = UI_DEMO_IDLE;
@@ -753,6 +830,14 @@ static void Ui_ShowError(const char *detail)
     lv_obj_add_flag(s_scan_line, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(s_success_label, LV_OBJ_FLAG_HIDDEN);
     Ui_SetLog(UI_TXT_LOG_ERROR);
+}
+
+static void Ui_UpdateAuth(void)
+{
+    if ((s_demo_state == UI_DEMO_IDLE) && (s_snapshot.auth.session_active != 0u))
+    {
+        Ui_ShowAuthReady(s_snapshot.auth.last_learned);
+    }
 }
 
 static void Ui_SetProgress(uint8_t value)
@@ -891,11 +976,24 @@ static void Ui_UpdateInventory(void)
 
 static void Ui_UpdateDeviceStatus(void)
 {
+    char text[32];
+
     Ui_SetLabelTextIfChanged(s_controller_status_label, UI_TXT_CTRL_OK);
     Ui_SetLabelTextIfChanged(s_actuator_status_label,
                              (s_snapshot.dispenser.last_status == APP_OK) ? UI_TXT_MOTOR_DEMO : UI_TXT_MOTOR_ERR);
-    Ui_SetLabelTextIfChanged(s_env_module_status_label,
-                             (s_snapshot.environment.last_status == APP_OK) ? UI_TXT_ENV_OK : UI_TXT_ENV_ERR);
+    if (s_snapshot.card_db.ready != 0u)
+    {
+        (void)snprintf(text,
+                       sizeof(text),
+                       "CARD DB %u/%u",
+                       (unsigned int)s_snapshot.card_db.count,
+                       (unsigned int)s_snapshot.card_db.max_records);
+        Ui_SetLabelTextIfChanged(s_env_module_status_label, text);
+    }
+    else
+    {
+        Ui_SetLabelTextIfChanged(s_env_module_status_label, "CARD DB ERR");
+    }
 }
 
 static const char *Ui_StatusShort(app_status_t status)

@@ -2,6 +2,8 @@
 #define SVC_UI_H
 
 #include "app_types.h"
+#include "svc_auth.h"
+#include "svc_card_db.h"
 #include "svc_diag.h"
 #include "svc_dispenser.h"
 #include "svc_environment.h"
@@ -21,6 +23,8 @@ typedef struct
 
 typedef struct
 {
+    svc_auth_snapshot_t auth;
+    svc_card_db_snapshot_t card_db;
     svc_dispenser_snapshot_t dispenser;
     svc_inventory_snapshot_t inventory;
     svc_environment_snapshot_t environment;

@@ -8,6 +8,7 @@
 #include "bsp_log.h"
 #include "bsp_time.h"
 #include "svc_auth.h"
+#include "svc_card_db.h"
 #include "svc_diag.h"
 #include "svc_dispenser.h"
 #include "svc_environment.h"
@@ -21,6 +22,7 @@ static uint8_t s_initialized;
 static void App_HandleEvent(const app_event_t *event);
 static void App_UpdateUiSnapshot(void);
 static void App_LogAuthCard(const drv_rfid_card_t *card);
+static void App_LogCardDbSnapshot(app_status_t init_status);
 
 void App_Main_SetEventQueue(osMessageQueueId_t queue_id)
 {
@@ -29,8 +31,6 @@ void App_Main_SetEventQueue(osMessageQueueId_t queue_id)
 
 app_status_t App_Main_Init(void)
 {
-    app_status_t auth_init_status;
-
     if (s_initialized != 0u)
     {
         return APP_OK;
@@ -41,7 +41,6 @@ app_status_t App_Main_Init(void)
     (void)Svc_Diag_Init();
     (void)Svc_Inventory_Init();
     (void)Svc_Dispenser_Init();
-    auth_init_status = Svc_Auth_Init();
     (void)Svc_Environment_Init();
 
     s_initialized = 1u;
@@ -50,8 +49,7 @@ app_status_t App_Main_Init(void)
     (void)Bsp_Log_Printf("[boot] SYSCLK=%lu Hz USART1=%lu baud\r\n",
                          (unsigned long)HAL_RCC_GetSysClockFreq(),
                          (unsigned long)APP_LOG_BAUDRATE);
-    (void)Bsp_Log_Printf("[auth] rc522 init %s\r\n", App_Status_ToString(auth_init_status));
-    (void)Bsp_Log_Printf("[boot] base app ready; display init is deferred to UI task\r\n");
+    (void)Bsp_Log_Printf("[boot] base app ready; display/auth init is deferred to tasks\r\n");
     return APP_OK;
 }
 
@@ -108,23 +106,68 @@ void App_Task_Control(void *argument)
 void App_Task_InputPoll(void *argument)
 {
     svc_auth_result_t auth;
+    app_status_t auth_init_status;
+    app_status_t card_db_status;
     uint32_t last_env_ms;
 
     (void)argument;
     last_env_ms = Bsp_Time_NowMs() - APP_ENV_POLL_PERIOD_MS;
     (void)Bsp_Log_Printf("[task] input poll started\r\n");
+    card_db_status = Svc_CardDb_Init();
+    App_LogCardDbSnapshot(card_db_status);
+    auth_init_status = Svc_Auth_Init();
+    (void)Bsp_Log_Printf("[auth] rc522 init %s\r\n", App_Status_ToString(auth_init_status));
 
     for (;;)
     {
-        if (Svc_Auth_Poll(&auth) == APP_OK && auth.state == SVC_AUTH_CARD_PRESENT)
+        if (Svc_Auth_Poll(&auth) == APP_OK)
         {
-            App_LogAuthCard(&auth.card);
             app_event_t event = {
-                .type = APP_EVENT_AUTH_PRESENT,
+                .type = APP_EVENT_NONE,
                 .arg0 = 0u,
                 .arg1 = 0u
             };
-            (void)App_Main_PostEvent(&event, 0u);
+
+            switch (auth.state)
+            {
+                case SVC_AUTH_AUTHORIZED:
+                    App_LogAuthCard(&auth.card);
+                    (void)Bsp_Log_Printf("[auth] card authorized%s\r\n",
+                                         (auth.learned != 0u) ? " learned" : "");
+                    event.type = APP_EVENT_AUTH_GRANTED;
+                    event.arg0 = auth.learned;
+                    break;
+
+                case SVC_AUTH_DENIED:
+                    App_LogAuthCard(&auth.card);
+                    (void)Bsp_Log_Printf("[auth] card denied\r\n");
+                    event.type = APP_EVENT_AUTH_DENIED;
+                    break;
+
+                case SVC_AUTH_DB_UNAVAILABLE:
+                    App_LogAuthCard(&auth.card);
+                    (void)Bsp_Log_Printf("[auth] card db unavailable: %s\r\n",
+                                         App_Status_ToString(auth.last_status));
+                    event.type = APP_EVENT_AUTH_DB_ERROR;
+                    break;
+
+                case SVC_AUTH_SESSION_TIMEOUT:
+                    (void)Bsp_Log_Printf("[auth] session timeout\r\n");
+                    event.type = APP_EVENT_AUTH_TIMEOUT;
+                    break;
+
+                case SVC_AUTH_CARD_PRESENT:
+                case SVC_AUTH_SESSION_ACTIVE:
+                case SVC_AUTH_NONE:
+                case SVC_AUTH_UNAVAILABLE:
+                default:
+                    break;
+            }
+
+            if (event.type != APP_EVENT_NONE)
+            {
+                (void)App_Main_PostEvent(&event, 0u);
+            }
         }
 
         if ((Bsp_Time_NowMs() - last_env_ms) >= APP_ENV_POLL_PERIOD_MS)
@@ -231,21 +274,58 @@ void App_Task_Idle(void *argument)
 static void App_HandleEvent(const app_event_t *event)
 {
     app_status_t ret = APP_OK;
+    app_event_t ui_event;
+    uint8_t set_diag_error = 0u;
 
     if (event == NULL)
     {
         return;
     }
 
+    ui_event = *event;
+
     switch (event->type)
     {
         case APP_EVENT_DISPENSE_REQUEST:
+            ret = Svc_Auth_ConsumeSession(NULL);
+            if (ret != APP_OK)
+            {
+                ui_event.type = (ret == APP_ERR_TIMEOUT) ? APP_EVENT_AUTH_TIMEOUT : APP_EVENT_AUTH_REQUIRED;
+                (void)Bsp_Log_Printf("[dispense] blocked by auth: %s\r\n", App_Status_ToString(ret));
+                ret = APP_OK;
+                break;
+            }
+
             ret = Svc_Dispenser_RequestOne();
-            (void)Bsp_Log_Printf("[dispense] request result=%s\r\n", App_Status_ToString(ret));
+            (void)Bsp_Log_Printf("[dispense] authorized request result=%s\r\n", App_Status_ToString(ret));
+            set_diag_error = (ret != APP_OK) ? 1u : 0u;
             break;
 
         case APP_EVENT_AUTH_PRESENT:
             (void)Bsp_Log_Printf("[auth] card present event\r\n");
+            break;
+
+        case APP_EVENT_AUTH_GRANTED:
+            (void)Bsp_Log_Printf("[auth] granted event%s\r\n",
+                                 (event->arg0 != 0u) ? " learned" : "");
+            break;
+
+        case APP_EVENT_AUTH_DENIED:
+            (void)Bsp_Log_Printf("[auth] denied event\r\n");
+            break;
+
+        case APP_EVENT_AUTH_REQUIRED:
+            (void)Bsp_Log_Printf("[auth] required event\r\n");
+            break;
+
+        case APP_EVENT_AUTH_TIMEOUT:
+            (void)Bsp_Log_Printf("[auth] timeout event\r\n");
+            break;
+
+        case APP_EVENT_AUTH_DB_ERROR:
+            (void)Bsp_Log_Printf("[auth] db error event\r\n");
+            set_diag_error = 1u;
+            ret = APP_ERR_HW;
             break;
 
         case APP_EVENT_ENV_UPDATED:
@@ -253,6 +333,7 @@ static void App_HandleEvent(const app_event_t *event)
 
         case APP_EVENT_FAULT:
             ret = APP_ERR_HW;
+            set_diag_error = 1u;
             break;
 
         case APP_EVENT_NONE:
@@ -260,8 +341,8 @@ static void App_HandleEvent(const app_event_t *event)
             break;
     }
 
-    Svc_Ui_PostEvent(event);
-    if (ret != APP_OK)
+    Svc_Ui_PostEvent(&ui_event);
+    if ((ret != APP_OK) && (set_diag_error != 0u))
     {
         Svc_Diag_SetLastError(ret);
     }
@@ -273,6 +354,8 @@ static void App_UpdateUiSnapshot(void)
 
     (void)memset(&snapshot, 0, sizeof(snapshot));
 
+    (void)Svc_Auth_GetSnapshot(&snapshot.auth);
+    (void)Svc_CardDb_GetSnapshot(&snapshot.card_db);
     (void)Svc_Dispenser_GetSnapshot(&snapshot.dispenser);
     (void)Svc_Inventory_GetSnapshot(&snapshot.inventory);
     (void)Svc_Environment_GetSnapshot(&snapshot.environment);
@@ -316,4 +399,17 @@ static void App_LogAuthCard(const drv_rfid_card_t *card)
     (void)Bsp_Log_Printf("[auth] card uid=%s len=%u\r\n",
                          uid_text,
                          (unsigned int)card->uid_len);
+}
+
+static void App_LogCardDbSnapshot(app_status_t init_status)
+{
+    svc_card_db_snapshot_t snapshot;
+
+    (void)Svc_CardDb_GetSnapshot(&snapshot);
+    (void)Bsp_Log_Printf("[auth] card db init %s ready=%u count=%u/%u seq=%lu\r\n",
+                         App_Status_ToString(init_status),
+                         (unsigned int)snapshot.ready,
+                         (unsigned int)snapshot.count,
+                         (unsigned int)snapshot.max_records,
+                         (unsigned long)snapshot.sequence);
 }

@@ -653,6 +653,11 @@
               <FilePath>../User/BSP/bsp_display_ltdc.c</FilePath>
             </File>
             <File>
+              <FileName>bsp_eeprom_at24c02.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../User/BSP/bsp_eeprom_at24c02.c</FilePath>
+            </File>
+            <File>
               <FileName>bsp_lcd.c</FileName>
               <FileType>1</FileType>
               <FilePath>../User/BSP/bsp_lcd.c</FilePath>
@@ -741,6 +746,11 @@
               <FileName>svc_auth.c</FileName>
               <FileType>1</FileType>
               <FilePath>../User/Services/svc_auth.c</FilePath>
+            </File>
+            <File>
+              <FileName>svc_card_db.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../User/Services/svc_card_db.c</FilePath>
             </File>
             <File>
               <FileName>svc_diag.c</FileName>
