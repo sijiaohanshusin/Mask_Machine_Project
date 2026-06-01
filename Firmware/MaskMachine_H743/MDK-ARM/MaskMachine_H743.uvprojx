@@ -658,6 +658,11 @@
               <FilePath>../User/BSP/bsp_eeprom_at24c02.c</FilePath>
             </File>
             <File>
+              <FileName>bsp_env_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../User/BSP/bsp_env_uart.c</FilePath>
+            </File>
+            <File>
               <FileName>bsp_lcd.c</FileName>
               <FileType>1</FileType>
               <FilePath>../User/BSP/bsp_lcd.c</FilePath>

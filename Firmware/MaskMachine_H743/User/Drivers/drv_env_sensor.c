@@ -2,9 +2,11 @@
 
 #include <stddef.h>
 
+#include "bsp_env_uart.h"
+
 app_status_t Drv_EnvSensor_Init(void)
 {
-    return APP_OK;
+    return Bsp_EnvUart_Init();
 }
 
 app_status_t Drv_EnvSensor_Read(drv_env_sample_t *sample)
