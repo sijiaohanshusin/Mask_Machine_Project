@@ -1,6 +1,8 @@
-# Local reference material and previous experiments
+# Local reference material, downloads, and previous experiments
+_local/
 NECCS/
 慧勤智远 STM32H743IIT6 V1.3小系统板/
+资料/
 *.HTML
 *.html
 *.pdf
@@ -8,6 +10,8 @@ NECCS/
 *.zip
 *.rar
 *.7z
+*.exe
+*.msi
 
 # Codex/OCR working context
 .codex/
@@ -62,7 +66,3 @@ Firmware/MaskMachine_H743/Middlewares/Third_Party/FreeRTOS/Source/st_readme.txt
 .idea/
 Thumbs.db
 desktop.ini
-
-# Local loose files
-资料/
-1007-8.exe
