@@ -10,8 +10,8 @@
 extern "C" {
 #endif
 
-#define BSP_LCD_WIDTH                   (1024U)
-#define BSP_LCD_HEIGHT                  (600U)
+#define BSP_LCD_WIDTH                   (480U)
+#define BSP_LCD_HEIGHT                  (272U)
 #define BSP_LCD_PIXEL_SIZE_BYTES        (2U)
 #define BSP_LCD_FRAMEBUFFER_ADDR        (0xC0000000UL)
 #define BSP_LCD_FRAMEBUFFER_SIZE_BYTES  (BSP_LCD_WIDTH * BSP_LCD_HEIGHT * BSP_LCD_PIXEL_SIZE_BYTES)

@@ -10,11 +10,13 @@
 
 LV_FONT_DECLARE(mm_font_zh_16);
 
-#define UI_FRAME_X                 8
-#define UI_FRAME_Y                 8
-#define UI_FRAME_W                 1008
-#define UI_FRAME_H                 584
-#define UI_HEADER_H                64
+#define UI_FRAME_X                 0
+#define UI_FRAME_Y                 0
+#define UI_FRAME_W                 480
+#define UI_FRAME_H                 272
+#define UI_BASE_W                  480
+#define UI_BASE_H                  272
+#define UI_HEADER_H                34
 #define UI_DEMO_VERIFY_MS          1000u
 #define UI_DEMO_DISPENSE_MS        1300u
 #define UI_DEMO_SUCCESS_MS         2600u
@@ -108,11 +110,6 @@ static ui_demo_state_t s_demo_state;
 static uint32_t s_demo_elapsed_ms;
 static char s_log_text[UI_LOG_TEXT_MAX] = UI_TXT_SYS_READY;
 
-static lv_point_t s_chart_points[10] = {
-    {0, 34}, {52, 38}, {104, 43}, {156, 42}, {208, 47},
-    {260, 47}, {312, 58}, {364, 50}, {416, 50}, {476, 62}
-};
-
 static lv_obj_t *s_header_mqtt_label;
 static lv_obj_t *s_header_signal_label;
 static lv_obj_t *s_clock_label;
@@ -125,7 +122,11 @@ static lv_obj_t *s_status_detail_label;
 static lv_obj_t *s_quota_label;
 static lv_obj_t *s_progress_bar;
 static lv_obj_t *s_progress_percent_label;
+static lv_obj_t *s_co2_value_label;
+static lv_obj_t *s_hcho_value_label;
+static lv_obj_t *s_tvoc_value_label;
 static lv_obj_t *s_pm25_value_label;
+static lv_obj_t *s_pm10_value_label;
 static lv_obj_t *s_aqi_badge_label;
 static lv_obj_t *s_temp_label;
 static lv_obj_t *s_humidity_label;
@@ -144,7 +145,6 @@ static void Ui_CreateLeftPanel(lv_obj_t *frame);
 static void Ui_CreateEnvironmentPanel(lv_obj_t *frame);
 static void Ui_CreateDevicePanel(lv_obj_t *frame);
 static void Ui_CreateCameraMock(lv_obj_t *parent);
-static void Ui_CreateChart(lv_obj_t *parent, int16_t x, int16_t y);
 static lv_obj_t *Ui_CreatePanel(lv_obj_t *parent, int16_t x, int16_t y, int16_t w, int16_t h,
                                 uint32_t bg, uint32_t border, int16_t radius, int16_t pad);
 static lv_obj_t *Ui_CreateLabel(lv_obj_t *parent, const char *text, int16_t x, int16_t y,
@@ -152,6 +152,13 @@ static lv_obj_t *Ui_CreateLabel(lv_obj_t *parent, const char *text, int16_t x, i
 static lv_obj_t *Ui_CreatePill(lv_obj_t *parent, int16_t x, int16_t y, int16_t w, int16_t h,
                                uint32_t bg, uint32_t border);
 static lv_obj_t *Ui_CreateDot(lv_obj_t *parent, int16_t x, int16_t y, uint32_t color);
+static int16_t Ui_ScaleX(int16_t value);
+static int16_t Ui_ScaleY(int16_t value);
+static uint16_t Ui_ScaleW(uint16_t value);
+static uint16_t Ui_ScaleH(uint16_t value);
+static const lv_font_t *Ui_FontForScreen(const lv_font_t *font);
+static void Ui_SetObjPos(lv_obj_t *obj, int16_t x, int16_t y);
+static void Ui_SetObjSize(lv_obj_t *obj, uint16_t w, uint16_t h);
 static void Ui_SetLabelTextIfChanged(lv_obj_t *label, const char *text);
 static void Ui_SetBarValueIfChanged(lv_obj_t *bar, int32_t value, lv_anim_enable_t anim);
 static void Ui_PrepareWrappedLabel(lv_obj_t *label, int16_t width);
@@ -308,7 +315,7 @@ void Svc_Ui_Process(uint32_t elapsed_ms)
 
 static void Ui_Create(void)
 {
-    lv_obj_t *screen = lv_scr_act();
+    lv_obj_t *screen = lv_screen_active();
     lv_obj_t *frame;
 
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
@@ -334,21 +341,21 @@ static void Ui_CreateHeader(lv_obj_t *frame)
     header = Ui_CreatePanel(frame, 0, 0, UI_FRAME_W, UI_HEADER_H, 0x111A2C, 0x26354A, 0, 0);
     lv_obj_set_style_border_side(header, LV_BORDER_SIDE_BOTTOM, 0);
 
-    mark = Ui_CreatePill(header, 24, 16, 26, 26, 0x22D3EE, 0x22D3EE);
-    (void)Ui_CreateLabel(mark, "M", 7, 5, &lv_font_montserrat_14, 0x06101D);
+    mark = Ui_CreatePill(header, 8, 7, 20, 20, 0x22D3EE, 0x22D3EE);
+    (void)Ui_CreateLabel(mark, "M", 5, 3, &lv_font_montserrat_14, 0x06101D);
 
-    (void)Ui_CreateLabel(header, UI_TXT_TITLE, 62, 18, &mm_font_zh_16, 0xF8FAFC);
+    (void)Ui_CreateLabel(header, UI_TXT_TITLE, 36, 8, &mm_font_zh_16, 0xF8FAFC);
 
-    chip = Ui_CreatePill(header, 286, 16, 142, 28, 0x10384A, 0x0E7490);
-    (void)Ui_CreateLabel(chip, "H743 APP", 28, 7, &lv_font_montserrat_14, 0x22D3EE);
+    chip = Ui_CreatePill(header, 156, 7, 58, 20, 0x10384A, 0x0E7490);
+    (void)Ui_CreateLabel(chip, "H743", 13, 4, &lv_font_montserrat_14, 0x22D3EE);
 
-    (void)Ui_CreateDot(header, 666, 21, 0x4ADE80);
-    s_header_mqtt_label = Ui_CreateLabel(header, UI_TXT_MQTT_UNSET, 686, 20, &mm_font_zh_16, 0xE2E8F0);
+    (void)Ui_CreateDot(header, 226, 10, 0x4ADE80);
+    s_header_mqtt_label = Ui_CreateLabel(header, UI_TXT_MQTT_UNSET, 242, 8, &mm_font_zh_16, 0xE2E8F0);
 
-    (void)Ui_CreateDot(header, 802, 21, 0x22D3EE);
-    s_header_signal_label = Ui_CreateLabel(header, "WiFi -- dBm", 822, 20, &lv_font_montserrat_14, 0xE2E8F0);
+    (void)Ui_CreateDot(header, 340, 10, 0x22D3EE);
+    s_header_signal_label = Ui_CreateLabel(header, "--", 356, 8, &lv_font_montserrat_14, 0xE2E8F0);
 
-    s_clock_label = Ui_CreateLabel(header, "00:00:00", 916, 18, &lv_font_montserrat_20, 0xFFFFFF);
+    s_clock_label = Ui_CreateLabel(header, "00:00", 414, 7, &lv_font_montserrat_14, 0xFFFFFF);
 }
 
 static void Ui_CreateLeftPanel(lv_obj_t *frame)
@@ -359,49 +366,49 @@ static void Ui_CreateLeftPanel(lv_obj_t *frame)
     lv_obj_t *icon_bg;
     lv_obj_t *touch_layer;
 
-    left_panel = Ui_CreatePanel(frame, 24, 84, 576, 476, 0x1A2738, 0x334155, 16, 0);
+    left_panel = Ui_CreatePanel(frame, 6, 42, 292, 188, 0x1A2738, 0x334155, 8, 0);
     lv_obj_add_flag(left_panel, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(left_panel, Ui_LeftPanelEvent, LV_EVENT_CLICKED, NULL);
 
     Ui_CreateCameraMock(left_panel);
 
-    prompt = Ui_CreatePill(left_panel, 154, 36, 270, 48, 0x111A2C, 0x475569);
-    s_prompt_label = Ui_CreateLabel(prompt, UI_TXT_PROMPT_IDLE, 34, 14, &mm_font_zh_16, 0x67E8F9);
+    prompt = Ui_CreatePill(left_panel, 12, 10, 126, 28, 0x111A2C, 0x475569);
+    s_prompt_label = Ui_CreateLabel(prompt, UI_TXT_PROMPT_IDLE, 18, 6, &mm_font_zh_16, 0x67E8F9);
 
     s_subprompt_label = Ui_CreateLabel(left_panel, UI_TXT_SUBPROMPT_IDLE,
-                                       142, 102, &mm_font_zh_16, 0x94A3B8);
-    Ui_PrepareWrappedLabel(s_subprompt_label, 420);
+                                       150, 14, &mm_font_zh_16, 0x94A3B8);
+    Ui_PrepareWrappedLabel(s_subprompt_label, 124);
 
     s_scan_line = lv_obj_create(left_panel);
-    lv_obj_set_pos(s_scan_line, 24, 134);
-    lv_obj_set_size(s_scan_line, 528, 3);
+    Ui_SetObjPos(s_scan_line, 16, 68);
+    Ui_SetObjSize(s_scan_line, 258, 2);
     lv_obj_set_style_bg_color(s_scan_line, lv_color_hex(0x22D3EE), 0);
     lv_obj_set_style_bg_opa(s_scan_line, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(s_scan_line, 0, 0);
     lv_obj_add_flag(s_scan_line, LV_OBJ_FLAG_HIDDEN);
 
-    s_success_label = Ui_CreateLabel(left_panel, "OK", 246, 186, &lv_font_montserrat_28, 0x22C55E);
+    s_success_label = Ui_CreateLabel(left_panel, "OK", 130, 80, &lv_font_montserrat_20, 0x22C55E);
     lv_obj_add_flag(s_success_label, LV_OBJ_FLAG_HIDDEN);
 
-    info = Ui_CreatePanel(left_panel, 24, 348, 528, 92, 0x111A2C, 0x26354A, 12, 0);
+    info = Ui_CreatePanel(left_panel, 14, 96, 264, 44, 0x111A2C, 0x26354A, 8, 0);
     lv_obj_set_style_bg_opa(info, LV_OPA_80, 0);
 
-    icon_bg = Ui_CreatePill(info, 20, 22, 48, 48, 0x0E7490, 0x22D3EE);
-    (void)Ui_CreateLabel(icon_bg, "ID", 13, 16, &lv_font_montserrat_14, 0x67E8F9);
+    icon_bg = Ui_CreatePill(info, 8, 8, 28, 28, 0x0E7490, 0x22D3EE);
+    (void)Ui_CreateLabel(icon_bg, "ID", 6, 7, &lv_font_montserrat_14, 0x67E8F9);
 
-    (void)Ui_CreateLabel(info, UI_TXT_CUR_STATE, 92, 24, &mm_font_zh_16, 0x94A3B8);
-    s_status_title_label = Ui_CreateLabel(info, UI_TXT_WAIT_TRIGGER, 92, 50, &mm_font_zh_16, 0xFFFFFF);
+    (void)Ui_CreateLabel(info, UI_TXT_CUR_STATE, 46, 5, &mm_font_zh_16, 0x94A3B8);
+    s_status_title_label = Ui_CreateLabel(info, UI_TXT_WAIT_TRIGGER, 46, 24, &mm_font_zh_16, 0xFFFFFF);
 
-    (void)Ui_CreateLabel(info, UI_TXT_QUOTA, 420, 22, &mm_font_zh_16, 0x94A3B8);
-    s_quota_label = Ui_CreateLabel(info, "--/--", 436, 50, &lv_font_montserrat_28, 0x22D3EE);
+    (void)Ui_CreateLabel(info, UI_TXT_QUOTA, 176, 5, &mm_font_zh_16, 0x94A3B8);
+    s_quota_label = Ui_CreateLabel(info, "--/--", 190, 23, &lv_font_montserrat_20, 0x22D3EE);
 
     s_status_detail_label = Ui_CreateLabel(left_panel, UI_TXT_DETAIL_IDLE,
-                                           44, 300, &mm_font_zh_16, 0xCBD5E1);
-    Ui_PrepareWrappedLabel(s_status_detail_label, 500);
+                                           16, 146, &mm_font_zh_16, 0xCBD5E1);
+    Ui_PrepareWrappedLabel(s_status_detail_label, 258);
 
     s_progress_bar = lv_bar_create(left_panel);
-    lv_obj_set_pos(s_progress_bar, 106, 326);
-    lv_obj_set_size(s_progress_bar, 330, 10);
+    Ui_SetObjPos(s_progress_bar, 16, 170);
+    Ui_SetObjSize(s_progress_bar, 198, 8);
     lv_bar_set_range(s_progress_bar, 0, 100);
     lv_bar_set_value(s_progress_bar, 0, LV_ANIM_OFF);
     lv_obj_set_style_bg_color(s_progress_bar, lv_color_hex(0x334155), 0);
@@ -409,11 +416,11 @@ static void Ui_CreateLeftPanel(lv_obj_t *frame)
     lv_obj_set_style_radius(s_progress_bar, 6, 0);
     lv_obj_set_style_radius(s_progress_bar, 6, LV_PART_INDICATOR);
 
-    s_progress_percent_label = Ui_CreateLabel(left_panel, "0%", 448, 319, &lv_font_montserrat_14, 0x22D3EE);
+    s_progress_percent_label = Ui_CreateLabel(left_panel, "0%", 222, 164, &lv_font_montserrat_14, 0x22D3EE);
 
     touch_layer = lv_obj_create(left_panel);
-    lv_obj_set_pos(touch_layer, 0, 0);
-    lv_obj_set_size(touch_layer, 576, 476);
+    Ui_SetObjPos(touch_layer, 0, 0);
+    Ui_SetObjSize(touch_layer, 292, 188);
     lv_obj_set_style_bg_opa(touch_layer, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(touch_layer, 0, 0);
     lv_obj_clear_flag(touch_layer, LV_OBJ_FLAG_SCROLLABLE);
@@ -426,31 +433,46 @@ static void Ui_CreateEnvironmentPanel(lv_obj_t *frame)
     lv_obj_t *env;
     lv_obj_t *refresh;
     lv_obj_t *badge;
+    lv_obj_t *tile;
 
-    env = Ui_CreatePanel(frame, 616, 84, 368, 258, 0x153A42, 0x0F766E, 16, 0);
+    env = Ui_CreatePanel(frame, 306, 42, 168, 118, 0x153A42, 0x0F766E, 8, 0);
     lv_obj_set_style_bg_opa(env, LV_OPA_90, 0);
 
-    (void)Ui_CreateDot(env, 22, 26, 0x4ADE80);
-    (void)Ui_CreateLabel(env, UI_TXT_ENV_TITLE, 44, 22, &mm_font_zh_16, 0xD7DEE8);
+    (void)Ui_CreateDot(env, 10, 12, 0x4ADE80);
+    (void)Ui_CreateLabel(env, UI_TXT_ENV_TITLE, 26, 9, &mm_font_zh_16, 0xD7DEE8);
 
-    refresh = Ui_CreatePill(env, 286, 18, 66, 28, 0x1E293B, 0x475569);
-    (void)Ui_CreateLabel(refresh, UI_TXT_REFRESH, 8, 7, &mm_font_zh_16, 0xA7B4C4);
+    refresh = Ui_CreatePill(env, 104, 8, 54, 22, 0x1E293B, 0x475569);
+    (void)Ui_CreateLabel(refresh, "U2", 18, 4, &lv_font_montserrat_14, 0xA7B4C4);
 
-    (void)Ui_CreateLabel(env, "PM2.5 (ug/m3)", 24, 74, &lv_font_montserrat_14, 0x94A3B8);
-    s_pm25_value_label = Ui_CreateLabel(env, "--", 24, 108, &lv_font_montserrat_28, 0x10B981);
+    tile = Ui_CreatePanel(env, 8, 36, 48, 28, 0x112733, 0x256D85, 5, 0);
+    (void)Ui_CreateLabel(tile, "CO2", 6, 3, &lv_font_montserrat_14, 0x94A3B8);
+    s_co2_value_label = Ui_CreateLabel(tile, "--", 6, 14, &lv_font_montserrat_14, 0xE2E8F0);
 
-    badge = Ui_CreatePill(env, 100, 118, 52, 34, 0x134E4A, 0x0F766E);
-    s_aqi_badge_label = Ui_CreateLabel(badge, UI_TXT_UNKNOWN, 10, 9, &mm_font_zh_16, 0xA7F3D0);
+    tile = Ui_CreatePanel(env, 60, 36, 48, 28, 0x112733, 0x0F766E, 5, 0);
+    (void)Ui_CreateLabel(tile, "PM25", 6, 3, &lv_font_montserrat_14, 0x94A3B8);
+    s_pm25_value_label = Ui_CreateLabel(tile, "--", 6, 14, &lv_font_montserrat_14, 0x10B981);
 
-    s_temp_label = Ui_CreateLabel(env, "--.- C", 280, 92, &lv_font_montserrat_20, 0xE2E8F0);
-    s_humidity_label = Ui_CreateLabel(env, "--.- %", 280, 138, &lv_font_montserrat_20, 0xE2E8F0);
-    (void)Ui_CreateDot(env, 258, 100, 0xFB923C);
-    (void)Ui_CreateDot(env, 258, 146, 0x60A5FA);
+    tile = Ui_CreatePanel(env, 112, 36, 48, 28, 0x112733, 0x256D85, 5, 0);
+    (void)Ui_CreateLabel(tile, "PM10", 6, 3, &lv_font_montserrat_14, 0x94A3B8);
+    s_pm10_value_label = Ui_CreateLabel(tile, "--", 6, 14, &lv_font_montserrat_14, 0xE2E8F0);
 
-    s_env_state_label = Ui_CreateLabel(env, UI_TXT_ENV_NOT_CONNECTED, 24, 166, &mm_font_zh_16, 0x94A3B8);
-    Ui_PrepareWrappedLabel(s_env_state_label, 220);
+    tile = Ui_CreatePanel(env, 8, 68, 48, 28, 0x112733, 0x7C5A1A, 5, 0);
+    (void)Ui_CreateLabel(tile, "HCHO", 6, 3, &lv_font_montserrat_14, 0x94A3B8);
+    s_hcho_value_label = Ui_CreateLabel(tile, "--", 6, 14, &lv_font_montserrat_14, 0xE2E8F0);
 
-    Ui_CreateChart(env, 24, 186);
+    tile = Ui_CreatePanel(env, 60, 68, 48, 28, 0x112733, 0x6D5DA8, 5, 0);
+    (void)Ui_CreateLabel(tile, "TVOC", 6, 3, &lv_font_montserrat_14, 0x94A3B8);
+    s_tvoc_value_label = Ui_CreateLabel(tile, "--", 6, 14, &lv_font_montserrat_14, 0xE2E8F0);
+
+    tile = Ui_CreatePanel(env, 112, 68, 48, 28, 0x112733, 0x475569, 5, 0);
+    (void)Ui_CreateLabel(tile, "T/RH", 6, 3, &lv_font_montserrat_14, 0x94A3B8);
+    s_temp_label = Ui_CreateLabel(tile, "--.-C", 6, 13, &lv_font_montserrat_14, 0xE2E8F0);
+
+    badge = Ui_CreatePill(env, 8, 98, 38, 18, 0x134E4A, 0x0F766E);
+    s_aqi_badge_label = Ui_CreateLabel(badge, UI_TXT_UNKNOWN, 5, 1, &mm_font_zh_16, 0xA7F3D0);
+    s_env_state_label = Ui_CreateLabel(env, UI_TXT_ENV_NOT_CONNECTED, 52, 98, &mm_font_zh_16, 0x94A3B8);
+    Ui_PrepareWrappedLabel(s_env_state_label, 66);
+    s_humidity_label = Ui_CreateLabel(env, "--%", 124, 98, &lv_font_montserrat_14, 0xE2E8F0);
 }
 
 static void Ui_CreateDevicePanel(lv_obj_t *frame)
@@ -458,15 +480,15 @@ static void Ui_CreateDevicePanel(lv_obj_t *frame)
     lv_obj_t *dev;
     lv_obj_t *log_box;
 
-    dev = Ui_CreatePanel(frame, 616, 358, 368, 202, 0x1B293A, 0x26354A, 16, 0);
+    dev = Ui_CreatePanel(frame, 306, 166, 168, 64, 0x1B293A, 0x26354A, 8, 0);
     lv_obj_set_style_bg_opa(dev, LV_OPA_90, 0);
 
-    (void)Ui_CreateDot(dev, 22, 28, 0x60A5FA);
-    (void)Ui_CreateLabel(dev, UI_TXT_DEVICE_TITLE, 44, 24, &mm_font_zh_16, 0xD7DEE8);
+    (void)Ui_CreateDot(dev, 10, 10, 0x60A5FA);
+    (void)Ui_CreateLabel(dev, UI_TXT_DEVICE_TITLE, 26, 7, &mm_font_zh_16, 0xD7DEE8);
 
     s_inventory_arc = lv_arc_create(dev);
-    lv_obj_set_pos(s_inventory_arc, 24, 76);
-    lv_obj_set_size(s_inventory_arc, 72, 72);
+    Ui_SetObjPos(s_inventory_arc, 10, 26);
+    Ui_SetObjSize(s_inventory_arc, 34, 34);
     lv_arc_set_range(s_inventory_arc, 0, 100);
     lv_arc_set_value(s_inventory_arc, 0);
     lv_arc_set_bg_angles(s_inventory_arc, 0, 360);
@@ -474,84 +496,104 @@ static void Ui_CreateDevicePanel(lv_obj_t *frame)
     lv_obj_remove_style(s_inventory_arc, NULL, LV_PART_KNOB);
     lv_obj_clear_flag(s_inventory_arc, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_arc_color(s_inventory_arc, lv_color_hex(0x334155), LV_PART_MAIN);
-    lv_obj_set_style_arc_width(s_inventory_arc, 8, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(s_inventory_arc, 4, LV_PART_MAIN);
     lv_obj_set_style_arc_color(s_inventory_arc, lv_color_hex(0x3B82F6), LV_PART_INDICATOR);
-    lv_obj_set_style_arc_width(s_inventory_arc, 8, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(s_inventory_arc, 4, LV_PART_INDICATOR);
 
-    s_inventory_value_label = Ui_CreateLabel(dev, "--", 48, 102, &lv_font_montserrat_20, 0xFFFFFF);
-    (void)Ui_CreateLabel(dev, UI_TXT_CUR_STOCK, 112, 86, &mm_font_zh_16, 0x94A3B8);
-    s_inventory_note_label = Ui_CreateLabel(dev, UI_TXT_STOCK_WAIT, 112, 114, &mm_font_zh_16, 0x60A5FA);
-    Ui_PrepareWrappedLabel(s_inventory_note_label, 128);
+    s_inventory_value_label = Ui_CreateLabel(dev, "--", 18, 36, &lv_font_montserrat_14, 0xFFFFFF);
+    (void)Ui_CreateLabel(dev, UI_TXT_CUR_STOCK, 52, 25, &mm_font_zh_16, 0x94A3B8);
+    s_inventory_note_label = Ui_CreateLabel(dev, UI_TXT_STOCK_WAIT, 52, 43, &mm_font_zh_16, 0x60A5FA);
+    Ui_PrepareWrappedLabel(s_inventory_note_label, 58);
 
-    s_controller_status_label = Ui_CreateLabel(dev, UI_TXT_CTRL_PLACE, 224, 76, &mm_font_zh_16, 0x94A3B8);
-    s_actuator_status_label = Ui_CreateLabel(dev, UI_TXT_MOTOR_PLACE, 224, 106, &mm_font_zh_16, 0x94A3B8);
-    s_env_module_status_label = Ui_CreateLabel(dev, UI_TXT_ENV_PLACE, 224, 136, &mm_font_zh_16, 0x94A3B8);
+    s_controller_status_label = Ui_CreateLabel(dev, UI_TXT_CTRL_PLACE, 112, 22, &mm_font_zh_16, 0x94A3B8);
+    s_actuator_status_label = Ui_CreateLabel(dev, UI_TXT_MOTOR_PLACE, 112, 38, &mm_font_zh_16, 0x94A3B8);
+    s_env_module_status_label = Ui_CreateLabel(dev, UI_TXT_ENV_PLACE, 112, 52, &mm_font_zh_16, 0x94A3B8);
 
-    log_box = Ui_CreatePanel(dev, 24, 160, 320, 28, 0x111827, 0x26354A, 4, 0);
-    s_log_label = Ui_CreateLabel(log_box, "> [SYS] --", 10, 7, &mm_font_zh_16, 0x4ADE80);
-    lv_label_set_long_mode(s_log_label, LV_LABEL_LONG_CLIP);
+    log_box = Ui_CreatePanel(frame, 6, 236, 468, 28, 0x111827, 0x26354A, 4, 0);
+    s_log_label = Ui_CreateLabel(log_box, "> [SYS] --", 8, 6, &mm_font_zh_16, 0x4ADE80);
+    lv_label_set_long_mode(s_log_label, LV_LABEL_LONG_MODE_CLIP);
 }
 
 static void Ui_CreateCameraMock(lv_obj_t *parent)
 {
     lv_obj_t *obj;
 
-    obj = Ui_CreatePanel(parent, 0, 0, 576, 476, 0x243244, 0x243244, 16, 0);
+    obj = Ui_CreatePanel(parent, 0, 0, 292, 188, 0x243244, 0x243244, 8, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
 
-    obj = Ui_CreatePanel(parent, 0, 0, 248, 476, 0x60483B, 0x60483B, 0, 0);
+    obj = Ui_CreatePanel(parent, 0, 0, 110, 188, 0x60483B, 0x60483B, 0, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
 
-    obj = Ui_CreatePanel(parent, 280, 0, 296, 476, 0x4B5563, 0x4B5563, 0, 0);
+    obj = Ui_CreatePanel(parent, 150, 0, 142, 188, 0x4B5563, 0x4B5563, 0, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_40, 0);
 
-    obj = Ui_CreatePanel(parent, 386, 26, 34, 54, 0x111827, 0x111827, 6, 0);
+    obj = Ui_CreatePanel(parent, 198, 14, 18, 28, 0x111827, 0x111827, 4, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
-    obj = Ui_CreatePanel(parent, 462, 28, 34, 54, 0x111827, 0x111827, 6, 0);
+    obj = Ui_CreatePanel(parent, 236, 16, 18, 28, 0x111827, 0x111827, 4, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
-    obj = Ui_CreatePanel(parent, 540, 46, 26, 64, 0x111827, 0x111827, 6, 0);
-    lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
-
-    obj = Ui_CreatePill(parent, 250, 108, 86, 86, 0x111827, 0x111827);
-    lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
-    obj = Ui_CreatePanel(parent, 232, 190, 126, 178, 0x111827, 0x111827, 20, 0);
+    obj = Ui_CreatePanel(parent, 270, 24, 14, 32, 0x111827, 0x111827, 4, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
 
-    obj = Ui_CreatePanel(parent, 0, 0, 576, 476, 0x0F172A, 0x0F172A, 16, 0);
+    obj = Ui_CreatePill(parent, 118, 44, 54, 54, 0x111827, 0x111827);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
+    obj = Ui_CreatePanel(parent, 108, 94, 72, 76, 0x111827, 0x111827, 10, 0);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_50, 0);
+
+    obj = Ui_CreatePanel(parent, 0, 0, 292, 188, 0x0F172A, 0x0F172A, 8, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_60, 0);
 }
 
-static void Ui_CreateChart(lv_obj_t *parent, int16_t x, int16_t y)
+static int16_t Ui_ScaleX(int16_t value)
 {
-    static const char *labels[5] = {"35", "30", "25", "20", "0"};
-    lv_obj_t *line;
-    lv_obj_t *axis;
-    uint8_t i;
+    return (int16_t)(((int32_t)value * (int32_t)BSP_LCD_WIDTH + (UI_BASE_W / 2)) / UI_BASE_W);
+}
 
-    for (i = 0u; i < 5u; i++)
+static int16_t Ui_ScaleY(int16_t value)
+{
+    return (int16_t)(((int32_t)value * (int32_t)BSP_LCD_HEIGHT + (UI_BASE_H / 2)) / UI_BASE_H);
+}
+
+static uint16_t Ui_ScaleW(uint16_t value)
+{
+    uint32_t scaled = ((uint32_t)value * BSP_LCD_WIDTH + (UI_BASE_W / 2U)) / UI_BASE_W;
+    return (uint16_t)((scaled == 0U) ? 1U : scaled);
+}
+
+static uint16_t Ui_ScaleH(uint16_t value)
+{
+    uint32_t scaled = ((uint32_t)value * BSP_LCD_HEIGHT + (UI_BASE_H / 2U)) / UI_BASE_H;
+    return (uint16_t)((scaled == 0U) ? 1U : scaled);
+}
+
+static const lv_font_t *Ui_FontForScreen(const lv_font_t *font)
+{
+#if (BSP_LCD_WIDTH <= 480U)
+    if (font == &lv_font_montserrat_28)
     {
-        axis = lv_obj_create(parent);
-        lv_obj_set_pos(axis, x + 30, y + (int16_t)(i * 15u));
-        lv_obj_set_size(axis, 306, 1);
-        lv_obj_set_style_bg_color(axis, lv_color_hex(0x335766), 0);
-        lv_obj_set_style_bg_opa(axis, LV_OPA_50, 0);
-        lv_obj_set_style_border_width(axis, 0, 0);
-        lv_obj_clear_flag(axis, LV_OBJ_FLAG_SCROLLABLE);
-        (void)Ui_CreateLabel(parent, labels[i], x, y - 6 + (int16_t)(i * 15u),
-                             &lv_font_montserrat_12, 0x94A3B8);
+        return &lv_font_montserrat_20;
     }
+    if (font == &lv_font_montserrat_20)
+    {
+        return &lv_font_montserrat_14;
+    }
+#endif
+    return font;
+}
 
-    line = lv_line_create(parent);
-    lv_obj_set_pos(line, x + 30, y);
-    lv_line_set_points(line, s_chart_points, 10);
-    lv_obj_set_style_line_color(line, lv_color_hex(0x10B981), 0);
-    lv_obj_set_style_line_width(line, 3, 0);
-    lv_obj_set_style_line_rounded(line, 1, 0);
+static void Ui_SetObjPos(lv_obj_t *obj, int16_t x, int16_t y)
+{
+    if (obj != NULL)
+    {
+        lv_obj_set_pos(obj, Ui_ScaleX(x), Ui_ScaleY(y));
+    }
+}
 
-    (void)Ui_CreateLabel(parent, "-4m", x + 24, y + 70, &lv_font_montserrat_12, 0x94A3B8);
-    (void)Ui_CreateLabel(parent, "-3m", x + 108, y + 70, &lv_font_montserrat_12, 0x94A3B8);
-    (void)Ui_CreateLabel(parent, "-2m", x + 192, y + 70, &lv_font_montserrat_12, 0x94A3B8);
-    (void)Ui_CreateLabel(parent, "-1m", x + 276, y + 70, &lv_font_montserrat_12, 0x94A3B8);
+static void Ui_SetObjSize(lv_obj_t *obj, uint16_t w, uint16_t h)
+{
+    if (obj != NULL)
+    {
+        lv_obj_set_size(obj, Ui_ScaleW(w), Ui_ScaleH(h));
+    }
 }
 
 static lv_obj_t *Ui_CreatePanel(lv_obj_t *parent, int16_t x, int16_t y, int16_t w, int16_t h,
@@ -559,14 +601,14 @@ static lv_obj_t *Ui_CreatePanel(lv_obj_t *parent, int16_t x, int16_t y, int16_t 
 {
     lv_obj_t *panel = lv_obj_create(parent);
 
-    lv_obj_set_pos(panel, x, y);
-    lv_obj_set_size(panel, w, h);
+    Ui_SetObjPos(panel, x, y);
+    Ui_SetObjSize(panel, (uint16_t)w, (uint16_t)h);
     lv_obj_set_style_bg_color(panel, lv_color_hex(bg), 0);
     lv_obj_set_style_bg_opa(panel, LV_OPA_COVER, 0);
     lv_obj_set_style_border_color(panel, lv_color_hex(border), 0);
     lv_obj_set_style_border_width(panel, 1, 0);
-    lv_obj_set_style_radius(panel, radius, 0);
-    lv_obj_set_style_pad_all(panel, pad, 0);
+    lv_obj_set_style_radius(panel, Ui_ScaleY(radius), 0);
+    lv_obj_set_style_pad_all(panel, Ui_ScaleY(pad), 0);
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
     return panel;
 }
@@ -577,9 +619,9 @@ static lv_obj_t *Ui_CreateLabel(lv_obj_t *parent, const char *text, int16_t x, i
     lv_obj_t *label = lv_label_create(parent);
 
     lv_label_set_text(label, text);
-    lv_obj_set_pos(label, x, y);
+    Ui_SetObjPos(label, x, y);
     lv_obj_set_style_text_color(label, lv_color_hex(color), 0);
-    lv_obj_set_style_text_font(label, font, 0);
+    lv_obj_set_style_text_font(label, Ui_FontForScreen(font), 0);
     lv_obj_set_style_text_letter_space(label, 0, 0);
     return label;
 }
@@ -631,8 +673,8 @@ static void Ui_PrepareWrappedLabel(lv_obj_t *label, int16_t width)
         return;
     }
 
-    lv_obj_set_width(label, width);
-    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_width(label, Ui_ScaleW((uint16_t)width));
+    lv_label_set_long_mode(label, LV_LABEL_LONG_MODE_WRAP);
 }
 
 static void Ui_SetLog(const char *text)
@@ -714,8 +756,8 @@ static void Ui_UpdateDemo(uint32_t elapsed_ms)
 
     if ((s_demo_state == UI_DEMO_VERIFY) || (s_demo_state == UI_DEMO_DISPENSE))
     {
-        pos = 134u + ((s_demo_elapsed_ms % 1200u) * 170u) / 1200u;
-        lv_obj_set_y(s_scan_line, (lv_coord_t)pos);
+        pos = 68u + ((s_demo_elapsed_ms % 1200u) * 60u) / 1200u;
+        lv_obj_set_y(s_scan_line, (lv_coord_t)Ui_ScaleY((int16_t)pos));
     }
 
     if (s_demo_state == UI_DEMO_VERIFY)
@@ -858,15 +900,19 @@ static void Ui_UpdateEnvironment(void)
 {
     char text[32];
     uint8_t env_ready;
-    uint16_t pm25_x10;
     uint16_t pm25;
+    int16_t temp_abs;
 
     env_ready = ((s_snapshot.environment.last_status == APP_OK) &&
                  (s_snapshot.environment.sample.valid != 0u)) ? 1u : 0u;
 
     if (env_ready == 0u)
     {
+        Ui_SetLabelTextIfChanged(s_co2_value_label, "--");
+        Ui_SetLabelTextIfChanged(s_hcho_value_label, "--");
+        Ui_SetLabelTextIfChanged(s_tvoc_value_label, "--");
         Ui_SetLabelTextIfChanged(s_pm25_value_label, "--");
+        Ui_SetLabelTextIfChanged(s_pm10_value_label, "--");
         Ui_SetLabelTextIfChanged(s_aqi_badge_label, UI_TXT_UNKNOWN);
         Ui_SetLabelTextIfChanged(s_temp_label, "--.- C");
         Ui_SetLabelTextIfChanged(s_humidity_label, "--.- %");
@@ -874,10 +920,21 @@ static void Ui_UpdateEnvironment(void)
         return;
     }
 
-    pm25_x10 = s_snapshot.environment.sample.pm25_ugm3_x10;
-    pm25 = (uint16_t)(pm25_x10 / 10u);
-    (void)snprintf(text, sizeof(text), "%u", (unsigned int)pm25);
+    (void)snprintf(text, sizeof(text), "%u", (unsigned int)s_snapshot.environment.sample.co2_ppm);
+    Ui_SetLabelTextIfChanged(s_co2_value_label, text);
+
+    (void)snprintf(text, sizeof(text), "%u", (unsigned int)s_snapshot.environment.sample.ch2o_ugm3);
+    Ui_SetLabelTextIfChanged(s_hcho_value_label, text);
+
+    (void)snprintf(text, sizeof(text), "%u", (unsigned int)s_snapshot.environment.sample.tvoc_ugm3);
+    Ui_SetLabelTextIfChanged(s_tvoc_value_label, text);
+
+    pm25 = s_snapshot.environment.sample.pm25_ugm3;
+    (void)snprintf(text, sizeof(text), "%u", (unsigned int)s_snapshot.environment.sample.pm25_ugm3);
     Ui_SetLabelTextIfChanged(s_pm25_value_label, text);
+
+    (void)snprintf(text, sizeof(text), "%u", (unsigned int)s_snapshot.environment.sample.pm10_ugm3);
+    Ui_SetLabelTextIfChanged(s_pm10_value_label, text);
 
     if (pm25 <= 35u)
     {
@@ -895,11 +952,18 @@ static void Ui_UpdateEnvironment(void)
         Ui_SetLabelTextIfChanged(s_env_state_label, UI_TXT_AIR_BAD);
     }
 
+    temp_abs = s_snapshot.environment.sample.temperature_c_x10;
+    if (temp_abs < 0)
+    {
+        temp_abs = (int16_t)-temp_abs;
+    }
+
     (void)snprintf(text,
                    sizeof(text),
-                   "%d.%d C",
-                   (int)(s_snapshot.environment.sample.temperature_c_x10 / 10),
-                   (int)(s_snapshot.environment.sample.temperature_c_x10 % 10));
+                   "%s%d.%d C",
+                   (s_snapshot.environment.sample.temperature_c_x10 < 0) ? "-" : "",
+                   (int)(temp_abs / 10),
+                   (int)(temp_abs % 10));
     Ui_SetLabelTextIfChanged(s_temp_label, text);
 
     (void)snprintf(text,

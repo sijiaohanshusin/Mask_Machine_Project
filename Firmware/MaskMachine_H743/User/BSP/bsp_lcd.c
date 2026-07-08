@@ -2,12 +2,13 @@
 
 #include <string.h>
 
-#define BSP_LCD_HSW            (20U)
-#define BSP_LCD_HBP            (140U)
-#define BSP_LCD_HFP            (160U)
-#define BSP_LCD_VSW            (3U)
-#define BSP_LCD_VBP            (20U)
-#define BSP_LCD_VFP            (12U)
+/* 4.3-inch RGB panel baseline: 480x272, ~9 MHz pixel clock. */
+#define BSP_LCD_HSW            (41U)
+#define BSP_LCD_HBP            (2U)
+#define BSP_LCD_HFP            (2U)
+#define BSP_LCD_VSW            (10U)
+#define BSP_LCD_VBP            (2U)
+#define BSP_LCD_VFP            (2U)
 #define BSP_LCD_BLACK_RGB565   (0x0000U)
 
 LTDC_HandleTypeDef g_ltdc_handle;
@@ -224,7 +225,7 @@ static app_status_t Bsp_Lcd_ConfigPixelClock(void)
 
     periph_clk.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
     periph_clk.PLL3.PLL3M = 25U;
-    periph_clk.PLL3.PLL3N = 300U;
+    periph_clk.PLL3.PLL3N = 54U;
     periph_clk.PLL3.PLL3P = 2U;
     periph_clk.PLL3.PLL3Q = 2U;
     periph_clk.PLL3.PLL3R = 6U;
