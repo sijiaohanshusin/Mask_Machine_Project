@@ -25,7 +25,8 @@
 #define APP_UI_ALIVE_LOG_PERIOD_MS      5000u
 #define APP_DISPLAY_INIT_DELAY_MS       1500u
 #define APP_DIAG_LED_PERIOD_MS          500u
-#define APP_ENV_POLL_PERIOD_MS          30000u
+#define APP_ENV_POLL_PERIOD_MS          200u
+#define APP_ENV_STALE_MS                5000u
 #define APP_AUTH_POLL_PERIOD_MS         200u
 #define APP_AUTH_SESSION_VALID_MS       15000u
 #define APP_CARD_DB_LEARN_FIRST_CARD    1u

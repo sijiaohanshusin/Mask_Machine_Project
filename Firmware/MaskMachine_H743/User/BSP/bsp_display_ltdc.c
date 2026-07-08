@@ -9,10 +9,7 @@
 
 #define BSP_DISPLAY_TOUCH_POLL_MS (20u)
 
-static lv_disp_draw_buf_t s_draw_buf;
-static lv_disp_drv_t s_disp_drv;
-static lv_indev_drv_t s_indev_drv;
-static lv_disp_t *s_disp;
+static lv_display_t *s_disp;
 static lv_indev_t *s_indev;
 static uint8_t s_ready;
 static uint8_t s_touch_ready;
@@ -22,8 +19,8 @@ static bsp_touch_state_t s_touch_cache;
 static uint8_t s_touch_cache_valid;
 static uint32_t s_touch_poll_ms;
 
-static void Bsp_DisplayLtdc_Flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
-static void Bsp_DisplayLtdc_ReadTouch(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
+static void Bsp_DisplayLtdc_Flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map);
+static void Bsp_DisplayLtdc_ReadTouch(lv_indev_t *indev, lv_indev_data_t *data);
 static void Bsp_DisplayLtdc_TryInitTouch(void);
 
 app_status_t Bsp_DisplayLtdc_Init(void)
@@ -64,17 +61,19 @@ app_status_t Bsp_DisplayLtdc_Init(void)
 
     (void)Bsp_Log_Printf("[display] LVGL register display...\r\n");
     lv_init();
-    lv_disp_draw_buf_init(&s_draw_buf,
-                          (void *)BSP_LCD_LVGL_BUF1_ADDR,
-                          (void *)BSP_LCD_LVGL_BUF2_ADDR,
-                          BSP_LCD_DRAW_BUF_PIXELS);
+    s_disp = lv_display_create(BSP_LCD_WIDTH, BSP_LCD_HEIGHT);
+    if (s_disp == NULL)
+    {
+        return APP_ERR_HW;
+    }
 
-    lv_disp_drv_init(&s_disp_drv);
-    s_disp_drv.hor_res = BSP_LCD_WIDTH;
-    s_disp_drv.ver_res = BSP_LCD_HEIGHT;
-    s_disp_drv.flush_cb = Bsp_DisplayLtdc_Flush;
-    s_disp_drv.draw_buf = &s_draw_buf;
-    s_disp = lv_disp_drv_register(&s_disp_drv);
+    lv_display_set_color_format(s_disp, LV_COLOR_FORMAT_RGB565);
+    lv_display_set_flush_cb(s_disp, Bsp_DisplayLtdc_Flush);
+    lv_display_set_buffers(s_disp,
+                           (void *)BSP_LCD_LVGL_BUF1_ADDR,
+                           (void *)BSP_LCD_LVGL_BUF2_ADDR,
+                           (uint32_t)(BSP_LCD_DRAW_BUF_PIXELS * sizeof(lv_color_t)),
+                           LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     Bsp_DisplayLtdc_TryInitTouch();
     if (s_touch_ready == 0u)
@@ -153,7 +152,7 @@ uint8_t Bsp_DisplayLtdc_IsTouchReady(void)
     return s_touch_ready;
 }
 
-static void Bsp_DisplayLtdc_Flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
+static void Bsp_DisplayLtdc_Flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
     int32_t x1 = area->x1;
     int32_t y1 = area->y1;
@@ -164,7 +163,7 @@ static void Bsp_DisplayLtdc_Flush(lv_disp_drv_t *disp_drv, const lv_area_t *area
 
     if ((x2 < 0) || (y2 < 0) || (x1 >= (int32_t)BSP_LCD_WIDTH) || (y1 >= (int32_t)BSP_LCD_HEIGHT))
     {
-        lv_disp_flush_ready(disp_drv);
+        lv_display_flush_ready(disp);
         return;
     }
 
@@ -191,17 +190,17 @@ static void Bsp_DisplayLtdc_Flush(lv_disp_drv_t *disp_drv, const lv_area_t *area
                            (uint16_t)y1,
                            width,
                            height,
-                           (const uint16_t *)color_p,
+                           (const uint16_t *)px_map,
                            width);
-    lv_disp_flush_ready(disp_drv);
+    lv_display_flush_ready(disp);
 }
 
-static void Bsp_DisplayLtdc_ReadTouch(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
+static void Bsp_DisplayLtdc_ReadTouch(lv_indev_t *indev, lv_indev_data_t *data)
 {
     static lv_point_t last_point;
     bsp_touch_state_t touch;
 
-    (void)indev_drv;
+    (void)indev;
 
     if (s_touch_cache_valid != 0u)
     {
@@ -210,7 +209,7 @@ static void Bsp_DisplayLtdc_ReadTouch(lv_indev_drv_t *indev_drv, lv_indev_data_t
     else if (Bsp_Touch_Read(&touch) != APP_OK)
     {
         data->point = last_point;
-        data->state = LV_INDEV_STATE_REL;
+        data->state = LV_INDEV_STATE_RELEASED;
         data->continue_reading = false;
         return;
     }
@@ -220,13 +219,13 @@ static void Bsp_DisplayLtdc_ReadTouch(lv_indev_drv_t *indev_drv, lv_indev_data_t
         last_point.x = (lv_coord_t)touch.x;
         last_point.y = (lv_coord_t)touch.y;
         data->point = last_point;
-        data->state = LV_INDEV_STATE_PR;
+        data->state = LV_INDEV_STATE_PRESSED;
         data->continue_reading = false;
         return;
     }
 
     data->point = last_point;
-    data->state = LV_INDEV_STATE_REL;
+    data->state = LV_INDEV_STATE_RELEASED;
     data->continue_reading = false;
 }
 
@@ -242,10 +241,13 @@ static void Bsp_DisplayLtdc_TryInitTouch(void)
         return;
     }
 
-    lv_indev_drv_init(&s_indev_drv);
-    s_indev_drv.type = LV_INDEV_TYPE_POINTER;
-    s_indev_drv.read_cb = Bsp_DisplayLtdc_ReadTouch;
-    s_indev = lv_indev_drv_register(&s_indev_drv);
+    s_indev = lv_indev_create();
+    if (s_indev != NULL)
+    {
+        lv_indev_set_type(s_indev, LV_INDEV_TYPE_POINTER);
+        lv_indev_set_display(s_indev, s_disp);
+        lv_indev_set_read_cb(s_indev, Bsp_DisplayLtdc_ReadTouch);
+    }
     s_touch_ready = (s_indev != NULL) ? 1u : 0u;
 
     if (s_touch_ready != 0u)

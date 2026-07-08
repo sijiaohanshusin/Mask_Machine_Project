@@ -130,20 +130,30 @@ try {
     }
 
     $lvglDirs = @(
+        '.\Middlewares\LVGL\lvgl\src',
         '.\Middlewares\LVGL\lvgl\src\core',
+        '.\Middlewares\LVGL\lvgl\src\display',
         '.\Middlewares\LVGL\lvgl\src\draw',
+        '.\Middlewares\LVGL\lvgl\src\draw\convert',
         '.\Middlewares\LVGL\lvgl\src\draw\sw',
+        '.\Middlewares\LVGL\lvgl\src\draw\sw\blend',
         '.\Middlewares\LVGL\lvgl\src\font',
-        '.\Middlewares\LVGL\lvgl\src\hal',
+        '.\Middlewares\LVGL\lvgl\src\font\fmt_txt',
+        '.\Middlewares\LVGL\lvgl\src\indev',
+        '.\Middlewares\LVGL\lvgl\src\layouts',
+        '.\Middlewares\LVGL\lvgl\src\layouts\flex',
+        '.\Middlewares\LVGL\lvgl\src\layouts\grid',
         '.\Middlewares\LVGL\lvgl\src\misc',
+        '.\Middlewares\LVGL\lvgl\src\osal',
+        '.\Middlewares\LVGL\lvgl\src\stdlib',
+        '.\Middlewares\LVGL\lvgl\src\stdlib\builtin',
+        '.\Middlewares\LVGL\lvgl\src\themes',
+        '.\Middlewares\LVGL\lvgl\src\themes\default',
+        '.\Middlewares\LVGL\lvgl\src\themes\mono',
+        '.\Middlewares\LVGL\lvgl\src\themes\simple',
+        '.\Middlewares\LVGL\lvgl\src\tick',
         '.\Middlewares\LVGL\lvgl\src\widgets',
-        '.\Middlewares\LVGL\lvgl\src\extra',
-        '.\Middlewares\LVGL\lvgl\src\extra\layouts\flex',
-        '.\Middlewares\LVGL\lvgl\src\extra\layouts\grid',
-        '.\Middlewares\LVGL\lvgl\src\extra\themes\basic',
-        '.\Middlewares\LVGL\lvgl\src\extra\themes\default',
-        '.\Middlewares\LVGL\lvgl\src\extra\themes\mono',
-        '.\Middlewares\LVGL\lvgl\src\extra\libs\qrcode'
+        '.\Middlewares\LVGL\lvgl\src\libs\bin_decoder'
     )
 
     $lvglFiles = @()
@@ -152,9 +162,13 @@ try {
             $lvglFiles += Get-ChildItem -Path $dir -Filter *.c -File | ForEach-Object { To-UvPath $_.FullName }
         }
     }
-    if (Test-Path '.\Middlewares\LVGL\lvgl\src\extra\widgets') {
-        $lvglFiles += Get-ChildItem -Path '.\Middlewares\LVGL\lvgl\src\extra\widgets' -Filter *.c -File -Recurse | ForEach-Object { To-UvPath $_.FullName }
+    if (Test-Path '.\Middlewares\LVGL\lvgl\src\widgets') {
+        $lvglFiles += Get-ChildItem -Path '.\Middlewares\LVGL\lvgl\src\widgets' -Filter *.c -File -Recurse | ForEach-Object { To-UvPath $_.FullName }
     }
+    if (Test-Path '.\Middlewares\LVGL\lvgl\src\misc\cache') {
+        $lvglFiles += Get-ChildItem -Path '.\Middlewares\LVGL\lvgl\src\misc\cache' -Filter *.c -File -Recurse | ForEach-Object { To-UvPath $_.FullName }
+    }
+    $lvglFiles = $lvglFiles | Sort-Object -Unique
     Add-Group $xml $groupsNode 'Middlewares/LVGL' ([string[]]$lvglFiles)
 
     $settings = New-Object System.Xml.XmlWriterSettings

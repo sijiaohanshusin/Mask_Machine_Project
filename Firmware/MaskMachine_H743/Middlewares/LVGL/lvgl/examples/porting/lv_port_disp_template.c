@@ -1,232 +1,145 @@
 /**
- * @file lv_port_disp_templ.c
+ * @file lv_port_disp_template.c
  *
  */
 
 /*Copy this file as "lv_port_disp.c" and set this value to "1" to enable content*/
-#if 1
+#if 0
 
 /*********************
  *      INCLUDES
  *********************/
 #include "lv_port_disp_template.h"
-#include "../../lvgl.h"
-#include "LCD/lcd.h"
-#include "LCD/ltdc.h"
-#include "app_user_config.h"
-#include "mpu.h"
+#include <stdbool.h>
 
-#include <stdint.h>
+/*********************
+ *      DEFINES
+ *********************/
+#ifndef MY_DISP_HOR_RES
+    #warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen width, default value 320 is used for now.
+    #define MY_DISP_HOR_RES    320
+#endif
+
+#ifndef MY_DISP_VER_RES
+    #warning Please define or replace the macro MY_DISP_VER_RES with the actual screen height, default value 240 is used for now.
+    #define MY_DISP_VER_RES    240
+#endif
+
+#define BYTE_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB565)) /*will be 2 for RGB565 */
+
+/**********************
+ *      TYPEDEFS
+ **********************/
 
 /**********************
  *  STATIC PROTOTYPES
  **********************/
 static void disp_init(void);
-static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
-static void s_panel_clear_to_chroma_key(void);
-static void s_clean_dcache_by_addr(const void *addr, uint32_t size);
+
+static void disp_flush(lv_display_t * disp, const lv_area_t * area, uint8_t * px_map);
 
 /**********************
  *  STATIC VARIABLES
  **********************/
-#define LV_PORT_PANEL_FB_ADDR   0xC0800000u
-#define LV_PORT_PANEL_FB_BYTES  (LV_PORT_OVERLAY_W * LV_PORT_OVERLAY_H * 2u)
-#define LV_PORT_PANEL_FB_LIMIT  0xC0940000u
 
-#if ((LV_PORT_PANEL_FB_ADDR + LV_PORT_PANEL_FB_BYTES) > LV_PORT_PANEL_FB_LIMIT)
-#error "LVGL panel framebuffer must stay inside the reserved SDRAM window"
-#endif
-
-static uint16_t * const s_panel_fb = (uint16_t *)LV_PORT_PANEL_FB_ADDR;
-__SECTION_D2_SRAM static lv_color_t s_draw_buf_mem[LV_PORT_OVERLAY_W * LV_PORT_OVERLAY_DRAW_BUF_ROWS];
-
-static lv_disp_draw_buf_t s_draw_buf;
-static lv_disp_drv_t s_disp_drv;
-static lv_disp_t *s_disp = NULL;
-static uint8_t s_disp_registered = 0u;
+/**********************
+ *      MACROS
+ **********************/
 
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
 
-uint16_t lv_port_disp_get_origin_x(void)
-{
-    return (lcddev.width > (LV_PORT_OVERLAY_W + LV_PORT_OVERLAY_MARGIN_X))
-         ? (uint16_t)(lcddev.width - LV_PORT_OVERLAY_W - LV_PORT_OVERLAY_MARGIN_X)
-         : 0u;
-}
-
-uint16_t lv_port_disp_get_origin_y(void)
-{
-    return (lcddev.height > (LV_PORT_OVERLAY_H + LV_PORT_OVERLAY_MARGIN_Y))
-         ? (uint16_t)(lcddev.height - LV_PORT_OVERLAY_H - LV_PORT_OVERLAY_MARGIN_Y)
-         : 0u;
-}
-
-void lv_port_disp_reconfigure(void)
-{
-    s_panel_clear_to_chroma_key();
-}
-
 void lv_port_disp_init(void)
 {
+    /*-------------------------
+     * Initialize your display
+     * -----------------------*/
     disp_init();
-    s_panel_clear_to_chroma_key();
 
-    if (s_disp_registered != 0u)
-    {
-        s_disp_drv.hor_res = LV_PORT_OVERLAY_W;
-        s_disp_drv.ver_res = LV_PORT_OVERLAY_H;
-        if (s_disp != NULL)
-        {
-            lv_disp_drv_update(s_disp, &s_disp_drv);
-        }
-        return;
-    }
+    /*------------------------------------
+     * Create a display and set a flush_cb
+     * -----------------------------------*/
+    lv_display_t * disp = lv_display_create(MY_DISP_HOR_RES, MY_DISP_VER_RES);
+    lv_display_set_flush_cb(disp, disp_flush);
 
-    lv_disp_draw_buf_init(&s_draw_buf,
-                          s_draw_buf_mem,
-                          NULL,
-                          LV_PORT_OVERLAY_W * LV_PORT_OVERLAY_DRAW_BUF_ROWS);
+    /* Example 1
+     * One buffer for partial rendering*/
+    LV_ATTRIBUTE_MEM_ALIGN
+    static uint8_t buf_1_1[MY_DISP_HOR_RES * 10 * BYTE_PER_PIXEL];            /*A buffer for 10 rows*/
+    lv_display_set_buffers(disp, buf_1_1, NULL, sizeof(buf_1_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    lv_disp_drv_init(&s_disp_drv);
-    s_disp_drv.hor_res = LV_PORT_OVERLAY_W;
-    s_disp_drv.ver_res = LV_PORT_OVERLAY_H;
-    s_disp_drv.flush_cb = disp_flush;
-    s_disp_drv.draw_buf = &s_draw_buf;
+    /* Example 2
+     * Two buffers for partial rendering
+     * In flush_cb DMA or similar hardware should be used to update the display in the background.*/
+    LV_ATTRIBUTE_MEM_ALIGN
+    static uint8_t buf_2_1[MY_DISP_HOR_RES * 10 * BYTE_PER_PIXEL];
 
-    s_disp = lv_disp_drv_register(&s_disp_drv);
-    s_disp_registered = (s_disp != NULL) ? 1u : 0u;
-}
+    LV_ATTRIBUTE_MEM_ALIGN
+    static uint8_t buf_2_2[MY_DISP_HOR_RES * 10 * BYTE_PER_PIXEL];
+    lv_display_set_buffers(disp, buf_2_1, buf_2_2, sizeof(buf_2_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-void lv_port_disp_blit_to_display(void)
-{
-    uint16_t origin_x;
-    uint16_t origin_y;
-    uint16_t *dst_base;
-    uint16_t y;
+    /* Example 3
+     * Two buffers screen sized buffer for double buffering.
+     * Both LV_DISPLAY_RENDER_MODE_DIRECT and LV_DISPLAY_RENDER_MODE_FULL works, see their comments*/
+    LV_ATTRIBUTE_MEM_ALIGN
+    static uint8_t buf_3_1[MY_DISP_HOR_RES * MY_DISP_VER_RES * BYTE_PER_PIXEL];
 
-    if ((lcddev.width < LV_PORT_OVERLAY_W) || (lcddev.height < LV_PORT_OVERLAY_H))
-    {
-        return;
-    }
+    LV_ATTRIBUTE_MEM_ALIGN
+    static uint8_t buf_3_2[MY_DISP_HOR_RES * MY_DISP_VER_RES * BYTE_PER_PIXEL];
+    lv_display_set_buffers(disp, buf_3_1, buf_3_2, sizeof(buf_3_1), LV_DISPLAY_RENDER_MODE_DIRECT);
 
-    /* Let queued DMA2D work finish before the CPU overlays the LVGL pixels. */
-    (void)ltdc_draw_flush(APP_DISPLAY_DMA2D_TIMEOUT);
-
-    origin_x = lv_port_disp_get_origin_x();
-    origin_y = lv_port_disp_get_origin_y();
-    dst_base = (uint16_t *)ltdc_get_backbuf_addr();
-    if (dst_base == NULL)
-    {
-        return;
-    }
-
-    for (y = 0u; y < LV_PORT_OVERLAY_H; y++)
-    {
-        uint16_t *dst_row = dst_base + ((uint32_t)(origin_y + y) * (uint32_t)lcddev.width) + origin_x;
-        const uint16_t *src_row = &s_panel_fb[(uint32_t)y * LV_PORT_OVERLAY_W];
-        uint16_t x;
-
-        for (x = 0u; x < LV_PORT_OVERLAY_W; x++)
-        {
-            if (src_row[x] != LV_PORT_OVERLAY_CHROMA_KEY_RGB565)
-            {
-                dst_row[x] = src_row[x];
-            }
-        }
-    }
-
-    s_clean_dcache_by_addr(dst_base + ((uint32_t)origin_y * (uint32_t)lcddev.width) + origin_x,
-                           ((((uint32_t)LV_PORT_OVERLAY_H - 1u) * (uint32_t)lcddev.width) +
-                            (uint32_t)LV_PORT_OVERLAY_W) * sizeof(uint16_t));
 }
 
 /**********************
  *   STATIC FUNCTIONS
  **********************/
 
+/*Initialize your display and the required peripherals.*/
 static void disp_init(void)
 {
-    /* The legacy display pipeline already initialized LTDC/LCD before LVGL starts. */
+    /*You code here*/
 }
 
-static void s_panel_clear_to_chroma_key(void)
-{
-    uint32_t i;
+volatile bool disp_flush_enabled = true;
 
-    for (i = 0u; i < (uint32_t)(LV_PORT_OVERLAY_W * LV_PORT_OVERLAY_H); i++)
-    {
-        s_panel_fb[i] = LV_PORT_OVERLAY_CHROMA_KEY_RGB565;
-    }
+/* Enable updating the screen (the flushing process) when disp_flush() is called by LVGL
+ */
+void disp_enable_update(void)
+{
+    disp_flush_enabled = true;
 }
 
-static void s_clean_dcache_by_addr(const void *addr, uint32_t size)
+/* Disable updating the screen (the flushing process) when disp_flush() is called by LVGL
+ */
+void disp_disable_update(void)
 {
-#if (__DCACHE_PRESENT == 1U)
-    uintptr_t start_addr;
-    uintptr_t end_addr;
-    uintptr_t aligned_addr;
-    uint32_t aligned_size;
-
-    if ((addr == NULL) || (size == 0u))
-    {
-        return;
-    }
-
-    start_addr = (uintptr_t)addr;
-    end_addr = start_addr + (uintptr_t)size;
-    aligned_addr = start_addr & ~(uintptr_t)31u;
-    aligned_size = (uint32_t)(((end_addr + 31u) & ~(uintptr_t)31u) - aligned_addr);
-    SCB_CleanDCache_by_Addr((uint32_t *)aligned_addr, (int32_t)aligned_size);
-#else
-    LV_UNUSED(addr);
-    LV_UNUSED(size);
-#endif
+    disp_flush_enabled = false;
 }
 
-static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
+/*Flush the content of the internal buffer the specific area on the display.
+ *`px_map` contains the rendered image as raw pixel map and it should be copied to `area` on the display.
+ *You can use DMA or any hardware acceleration to do this operation in the background but
+ *'lv_display_flush_ready()' has to be called when it's finished.*/
+static void disp_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px_map)
 {
-    int32_t clip_x1;
-    int32_t clip_y1;
-    int32_t clip_x2;
-    int32_t clip_y2;
-    int32_t src_stride;
-    int32_t y;
+    if(disp_flush_enabled) {
+        /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
 
-    if ((area == NULL) || (color_p == NULL))
-    {
-        lv_disp_flush_ready(disp_drv);
-        return;
-    }
-
-    if ((area->x2 < 0) || (area->y2 < 0) ||
-        (area->x1 >= (lv_coord_t)LV_PORT_OVERLAY_W) ||
-        (area->y1 >= (lv_coord_t)LV_PORT_OVERLAY_H))
-    {
-        lv_disp_flush_ready(disp_drv);
-        return;
-    }
-
-    clip_x1 = (area->x1 < 0) ? 0 : area->x1;
-    clip_y1 = (area->y1 < 0) ? 0 : area->y1;
-    clip_x2 = (area->x2 >= (lv_coord_t)LV_PORT_OVERLAY_W) ? ((int32_t)LV_PORT_OVERLAY_W - 1) : area->x2;
-    clip_y2 = (area->y2 >= (lv_coord_t)LV_PORT_OVERLAY_H) ? ((int32_t)LV_PORT_OVERLAY_H - 1) : area->y2;
-    src_stride = (int32_t)(area->x2 - area->x1 + 1);
-
-    for (y = clip_y1; y <= clip_y2; y++)
-    {
-        uint16_t *dst_row = &s_panel_fb[(uint32_t)y * LV_PORT_OVERLAY_W + (uint32_t)clip_x1];
-        lv_color_t *src_row = &color_p[(uint32_t)(y - area->y1) * (uint32_t)src_stride + (uint32_t)(clip_x1 - area->x1)];
         int32_t x;
-
-        for (x = clip_x1; x <= clip_x2; x++)
-        {
-            dst_row[x - clip_x1] = src_row[x - clip_x1].full;
+        int32_t y;
+        for(y = area->y1; y <= area->y2; y++) {
+            for(x = area->x1; x <= area->x2; x++) {
+                /*Put a pixel to the display. For example:*/
+                /*put_px(x, y, *px_map)*/
+                px_map++;
+            }
         }
     }
 
-    lv_disp_flush_ready(disp_drv);
+    /*IMPORTANT!!!
+     *Inform the graphics library that you are ready with the flushing*/
+    lv_display_flush_ready(disp_drv);
 }
 
 #else /*Enable this file at the top*/

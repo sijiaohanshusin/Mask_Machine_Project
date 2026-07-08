@@ -93,6 +93,7 @@ void LTDC_IRQHandler(void);
 void LTDC_ER_IRQHandler(void);
 void DMA2D_IRQHandler(void);
 /* USER CODE BEGIN EFP */
+void USART2_IRQHandler(void);
 
 /* USER CODE END EFP */
 

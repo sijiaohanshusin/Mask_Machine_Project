@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "app_config.h"
+#include "bsp_env_uart.h"
 #include "bsp_led.h"
 #include "bsp_log.h"
 #include "bsp_time.h"
@@ -23,6 +24,8 @@ static void App_HandleEvent(const app_event_t *event);
 static void App_UpdateUiSnapshot(void);
 static void App_LogAuthCard(const drv_rfid_card_t *card);
 static void App_LogCardDbSnapshot(app_status_t init_status);
+static void App_LogEnvironmentSnapshot(void);
+static void App_LogEnvironmentDiag(app_status_t status);
 
 void App_Main_SetEventQueue(osMessageQueueId_t queue_id)
 {
@@ -108,7 +111,9 @@ void App_Task_InputPoll(void *argument)
     svc_auth_result_t auth;
     app_status_t auth_init_status;
     app_status_t card_db_status;
+    app_status_t env_status;
     uint32_t last_env_ms;
+    uint32_t last_env_log_ms = 0u;
 
     (void)argument;
     last_env_ms = Bsp_Time_NowMs() - APP_ENV_POLL_PERIOD_MS;
@@ -173,7 +178,8 @@ void App_Task_InputPoll(void *argument)
         if ((Bsp_Time_NowMs() - last_env_ms) >= APP_ENV_POLL_PERIOD_MS)
         {
             last_env_ms = Bsp_Time_NowMs();
-            if (Svc_Environment_Poll() == APP_OK)
+            env_status = Svc_Environment_Poll();
+            if (env_status == APP_OK)
             {
                 app_event_t event = {
                     .type = APP_EVENT_ENV_UPDATED,
@@ -181,6 +187,16 @@ void App_Task_InputPoll(void *argument)
                     .arg1 = 0u
                 };
                 (void)App_Main_PostEvent(&event, 0u);
+                if ((Bsp_Time_NowMs() - last_env_log_ms) >= 5000u)
+                {
+                    last_env_log_ms = Bsp_Time_NowMs();
+                    App_LogEnvironmentSnapshot();
+                }
+            }
+            else if ((Bsp_Time_NowMs() - last_env_log_ms) >= 5000u)
+            {
+                last_env_log_ms = Bsp_Time_NowMs();
+                App_LogEnvironmentDiag(env_status);
             }
         }
 
@@ -412,4 +428,59 @@ static void App_LogCardDbSnapshot(app_status_t init_status)
                          (unsigned int)snapshot.count,
                          (unsigned int)snapshot.max_records,
                          (unsigned long)snapshot.sequence);
+}
+
+static void App_LogEnvironmentSnapshot(void)
+{
+    svc_environment_snapshot_t snapshot;
+    int16_t temp_abs;
+
+    if (Svc_Environment_GetSnapshot(&snapshot) != APP_OK)
+    {
+        return;
+    }
+
+    if ((snapshot.last_status != APP_OK) || (snapshot.sample.valid == 0u))
+    {
+        return;
+    }
+
+    temp_abs = snapshot.sample.temperature_c_x10;
+    if (temp_abs < 0)
+    {
+        temp_abs = (int16_t)-temp_abs;
+    }
+
+    (void)Bsp_Log_Printf("[env] CO2=%u ppm HCHO=%u ug/m3 TVOC=%u ug/m3 PM2.5=%u PM10=%u T=%s%d.%dC RH=%u.%u%%\r\n",
+                         (unsigned int)snapshot.sample.co2_ppm,
+                         (unsigned int)snapshot.sample.ch2o_ugm3,
+                         (unsigned int)snapshot.sample.tvoc_ugm3,
+                         (unsigned int)snapshot.sample.pm25_ugm3,
+                         (unsigned int)snapshot.sample.pm10_ugm3,
+                         (snapshot.sample.temperature_c_x10 < 0) ? "-" : "",
+                         (int)(temp_abs / 10),
+                         (int)(temp_abs % 10),
+                         (unsigned int)(snapshot.sample.humidity_rh_x10 / 10u),
+                         (unsigned int)(snapshot.sample.humidity_rh_x10 % 10u));
+}
+
+static void App_LogEnvironmentDiag(app_status_t status)
+{
+    bsp_env_uart_diag_t diag;
+
+    if (Bsp_EnvUart_GetDiag(&diag) != APP_OK)
+    {
+        (void)Bsp_Log_Printf("[env] waiting status=%s uart_diag=unavailable\r\n",
+                             App_Status_ToString(status));
+        return;
+    }
+
+    (void)Bsp_Log_Printf("[env] waiting status=%s rx=%lu buffered=%u overflow=%lu errors=%lu last_err=0x%08lX last=0x%02X\r\n",
+                         App_Status_ToString(status),
+                         (unsigned long)diag.rx_bytes,
+                         (unsigned int)diag.rx_available,
+                         (unsigned long)diag.rx_overflow,
+                         (unsigned long)diag.rx_errors,
+                         (unsigned long)diag.last_error_code,
+                         (unsigned int)diag.last_byte);
 }

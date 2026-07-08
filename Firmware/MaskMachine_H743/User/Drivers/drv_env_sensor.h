@@ -10,6 +10,11 @@ extern "C" {
 
 typedef struct
 {
+    uint16_t co2_ppm;
+    uint16_t ch2o_ugm3;
+    uint16_t tvoc_ugm3;
+    uint16_t pm25_ugm3;
+    uint16_t pm10_ugm3;
     int16_t temperature_c_x10;
     uint16_t humidity_rh_x10;
     uint16_t pm25_ugm3_x10;

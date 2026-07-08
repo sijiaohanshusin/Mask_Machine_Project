@@ -3,8 +3,8 @@
  *
  */
 
- /*Copy this file as "lv_port_disp.h" and set this value to "1" to enable content*/
-#if 1
+/*Copy this file as "lv_port_disp.h" and set this value to "1" to enable content*/
+#if 0
 
 #ifndef LV_PORT_DISP_TEMPL_H
 #define LV_PORT_DISP_TEMPL_H
@@ -16,19 +16,15 @@ extern "C" {
 /*********************
  *      INCLUDES
  *********************/
-#include <stdint.h>
+#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
+#include "lvgl.h"
+#else
 #include "lvgl/lvgl.h"
+#endif
 
 /*********************
  *      DEFINES
  *********************/
-#define LV_PORT_OVERLAY_W                  1024u
-#define LV_PORT_OVERLAY_H                  600u
-#define LV_PORT_OVERLAY_DRAW_BUF_ROWS      16u
-#define LV_PORT_OVERLAY_MARGIN_X           0u
-#define LV_PORT_OVERLAY_MARGIN_Y           0u
-#define LV_PORT_OVERLAY_CHROMA_KEY_HEX     0xFF00FFu
-#define LV_PORT_OVERLAY_CHROMA_KEY_RGB565  0xF81Fu
 
 /**********************
  *      TYPEDEFS
@@ -37,11 +33,16 @@ extern "C" {
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
+/* Initialize low level display driver */
 void lv_port_disp_init(void);
-void lv_port_disp_reconfigure(void);
-void lv_port_disp_blit_to_display(void);
-uint16_t lv_port_disp_get_origin_x(void);
-uint16_t lv_port_disp_get_origin_y(void);
+
+/* Enable updating the screen (the flushing process) when disp_flush() is called by LVGL
+ */
+void disp_enable_update(void);
+
+/* Disable updating the screen (the flushing process) when disp_flush() is called by LVGL
+ */
+void disp_disable_update(void);
 
 /**********************
  *      MACROS
